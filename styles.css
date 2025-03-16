@@ -53,6 +53,32 @@ body {
     background-color: rgba(0, 0, 0, 0.03);
 }
 
+/* Specjalne style dla urządzeń mobilnych z ekranem dotykowym */
+.mobile-device .option {
+    -webkit-tap-highlight-color: transparent; /* Usuwa domyślne podświetlenie na dotyk */
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+.mobile-device .option.active-touch {
+    background-color: rgba(0, 123, 255, 0.1);
+    border-color: #007bff;
+}
+
+.mobile-device .btn {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+/* Zapobieganie powiększaniu tekstu w Safari na iOS */
+.mobile-device {
+    -webkit-text-size-adjust: 100%;
+}
+
 /* Ulepszone style dla urządzeń mobilnych */
 @media (max-width: 576px) {
     .container {

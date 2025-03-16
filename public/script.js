@@ -441,8 +441,63 @@ function restartQuiz() {
     startQuiz();
 }
 
-// Initialize the quiz when the document is loaded
-document.addEventListener('DOMContentLoaded', initQuiz);
+// Dodajemy funkcję wykrywania urządzenia mobilnego
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// Inicjalizacja aplikacji po załadowaniu DOM
+document.addEventListener('DOMContentLoaded', function() {
+    logWithTimestamp('DOM załadowany, inicjalizacja aplikacji');
+    
+    // Wykrywanie urządzenia mobilnego i dodanie klasy do body
+    if (isMobileDevice()) {
+        document.body.classList.add('mobile-device');
+        logWithTimestamp('Wykryto urządzenie mobilne: ' + navigator.userAgent);
+        
+        // Poprawiamy obsługę zdarzeń dotykowych dla urządzeń mobilnych
+        const optionElements = document.querySelectorAll('.option');
+        optionElements.forEach(option => {
+            option.addEventListener('touchstart', function(e) {
+                this.classList.add('active-touch');
+            });
+            
+            option.addEventListener('touchend', function(e) {
+                this.classList.remove('active-touch');
+                const answerId = this.dataset.id;
+                // Niewielkie opóźnienie, aby zapobiec przypadkowym kliknięciom
+                setTimeout(() => selectAnswer(answerId), 50);
+            });
+            
+            // Anulowanie domyślnego zachowania, aby zapobiec podwójnemu klikaniu
+            option.addEventListener('touchmove', function(e) {
+                this.classList.remove('active-touch');
+            });
+        });
+    }
+    
+    initQuiz();
+    
+    // Event listeners
+    elements.startBtn.addEventListener('click', startQuiz);
+    elements.nextBtn.addEventListener('click', nextQuestion);
+    elements.restartBtn.addEventListener('click', restartQuiz);
+    
+    // Poprawa adresowania dla opcji na urządzeniach mobilnych
+    const options = elements.optionsContainer.querySelectorAll('.option');
+    options.forEach(option => {
+        // Dodanie atrybutu data-id dla identyfikacji opcji
+        const optionText = option.textContent.trim();
+        if (optionText.startsWith('Odpowiedź A')) option.dataset.id = 'A';
+        if (optionText.startsWith('Odpowiedź B')) option.dataset.id = 'B';
+        if (optionText.startsWith('Odpowiedź C')) option.dataset.id = 'C';
+        if (optionText.startsWith('Odpowiedź D')) option.dataset.id = 'D';
+        
+        option.addEventListener('click', function() {
+            selectAnswer(this.dataset.id);
+        });
+    });
+});
 
 function initLogging() {
     // Upewnij się, że mamy element dla logów
@@ -715,4 +770,4 @@ function showTrophy() {
             document.body.removeChild(trophy);
         }, 1000);
     }, 4000);
-} 
+}
