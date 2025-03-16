@@ -31,14 +31,11 @@ const elements = {
     progressBar: document.getElementById('progress-bar'),
     finalScore: document.getElementById('final-score'),
     finalProgressBar: document.getElementById('final-progress-bar'),
+    percentageDisplay: document.getElementById('percentage-display'),
     
     // Nowe elementy konfiguracyjne
     currentFile: document.getElementById('current-file'),
-    currentCount: document.getElementById('current-count'),
-    resultContainer: document.getElementById('result-container'),
-    scoreDisplay: document.getElementById('score-display'),
-    percentageDisplay: document.getElementById('percentage-display'),
-    resultsProgress: document.getElementById('results-progress')
+    currentCount: document.getElementById('current-count')
 };
 
 // Na początku pliku dodaję tablicę z komunikatami motywacyjnymi
@@ -390,16 +387,32 @@ function finishQuiz() {
     
     // Update UI
     elements.quizContainer.classList.add('d-none');
-    elements.resultsScreen.classList.add('d-none');
-    elements.resultContainer.classList.remove('d-none');
+    elements.resultsScreen.classList.remove('d-none');
     
     // Calculate percentage
-    const totalQuestions = quizState.questions.length;
-    const scorePercentage = Math.round((quizState.score / totalQuestions) * 100);
-    logWithTimestamp(`Wynik końcowy: ${quizState.score}/${totalQuestions} (${scorePercentage}%)`);
+    const percentage = (quizState.score / quizState.questions.length) * 100;
+    logWithTimestamp(`Wynik końcowy: ${quizState.score}/${quizState.questions.length} (${percentage.toFixed(0)}%)`);
     
-    // Show results
-    showResults();
+    // Update final score
+    elements.finalScore.textContent = `Twój wynik: ${quizState.score}/${quizState.questions.length} (${percentage.toFixed(0)}%)`;
+    
+    // Update final progress bar
+    elements.finalProgressBar.style.width = `${percentage}%`;
+    
+    // Aktualizuj procent
+    elements.percentageDisplay.textContent = `${percentage.toFixed(0)}%`;
+    
+    // Set progress bar color based on score
+    if (percentage < 50) {
+        elements.finalProgressBar.classList.add('bg-danger');
+        logWithTimestamp('Wynik poniżej 50% - czerwony pasek postępu');
+    } else if (percentage < 75) {
+        elements.finalProgressBar.classList.add('bg-warning');
+        logWithTimestamp('Wynik pomiędzy 50% a 75% - żółty pasek postępu');
+    } else {
+        elements.finalProgressBar.classList.add('bg-success');
+        logWithTimestamp('Wynik powyżej 75% - zielony pasek postępu');
+    }
 }
 
 /**
@@ -408,14 +421,9 @@ function finishQuiz() {
 function restartQuiz() {
     logWithTimestamp('Restartowanie quizu');
     
-    // Reset kolorów pasków postępu
-    elements.progressBar.classList.remove('bg-danger', 'bg-warning', 'bg-success');
-    elements.progressBar.style.width = '0%';
-    elements.resultsProgress.classList.remove('bg-danger', 'bg-warning', 'bg-success');
-    elements.resultsProgress.style.width = '0%';
-    
-    // Ukryj ekran wyników
-    elements.resultContainer.classList.add('d-none');
+    // Reset UI
+    elements.finalProgressBar.classList.remove('bg-danger', 'bg-warning', 'bg-success');
+    elements.finalProgressBar.style.width = '0%';
     
     // Przeładuj konfigurację i zaktualizuj wyświetlanie
     if (window.quizConfig) {
@@ -424,7 +432,7 @@ function restartQuiz() {
     }
     updateConfigDisplay();
     
-    // Wyczyść bufor pytań i resetuj stan quizu
+    // Wyczyść bufor pytań, aby wymusić ich ponowne załadowanie
     quizState.questions = [];
     quizState.selectedAnswer = null;
     quizState.currentQuestionIndex = 0;
@@ -475,16 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Event listeners
     elements.startBtn.addEventListener('click', startQuiz);
     elements.nextBtn.addEventListener('click', nextQuestion);
-    
-    // Upewnij się, że oba przyciski restart mają nasłuchiwacze
     elements.restartBtn.addEventListener('click', restartQuiz);
-    
-    // Jeśli istnieje drugi przycisk restart w kontenerze wyników, dodaj mu również nasłuchiwacz
-    const resultContainerRestartBtn = document.querySelector('#result-container #restart-btn');
-    if (resultContainerRestartBtn && resultContainerRestartBtn !== elements.restartBtn) {
-        resultContainerRestartBtn.addEventListener('click', restartQuiz);
-        logWithTimestamp('Dodano nasłuchiwacz do drugiego przycisku restart');
-    }
     
     // Poprawa adresowania dla opcji na urządzeniach mobilnych
     const options = elements.optionsContainer.querySelectorAll('.option');
@@ -680,10 +679,6 @@ function showResults() {
     
     elements.scoreDisplay.textContent = `${quizState.score}/${totalQuestions}`;
     elements.percentageDisplay.textContent = `${scorePercentage}%`;
-    
-    // Resetowanie kolorów paska postępu przed ustawieniem nowego
-    elements.resultsProgress.style.backgroundColor = '';
-    elements.resultsProgress.classList.remove('bg-danger', 'bg-warning', 'bg-success');
     
     // Animate results progress bar
     elements.resultsProgress.style.transition = 'width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
