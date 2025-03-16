@@ -394,8 +394,9 @@ function finishQuiz() {
     elements.resultContainer.classList.remove('d-none');
     
     // Calculate percentage
-    const percentage = (quizState.score / quizState.questions.length) * 100;
-    logWithTimestamp(`Wynik końcowy: ${quizState.score}/${quizState.questions.length} (${percentage.toFixed(0)}%)`);
+    const totalQuestions = quizState.questions.length;
+    const scorePercentage = Math.round((quizState.score / totalQuestions) * 100);
+    logWithTimestamp(`Wynik końcowy: ${quizState.score}/${totalQuestions} (${scorePercentage}%)`);
     
     // Show results
     showResults();
@@ -407,8 +408,14 @@ function finishQuiz() {
 function restartQuiz() {
     logWithTimestamp('Restartowanie quizu');
     
-    // Reset UI
-    elements.finalProgressBar.classList.remove('bg-danger', 'bg-warning', 'bg-success');
+    // Reset kolorów pasków postępu
+    elements.progressBar.classList.remove('bg-danger', 'bg-warning', 'bg-success');
+    elements.progressBar.style.width = '0%';
+    elements.resultsProgress.classList.remove('bg-danger', 'bg-warning', 'bg-success');
+    elements.resultsProgress.style.width = '0%';
+    
+    // Ukryj ekran wyników
+    elements.resultContainer.classList.add('d-none');
     
     // Przeładuj konfigurację i zaktualizuj wyświetlanie
     if (window.quizConfig) {
@@ -417,8 +424,12 @@ function restartQuiz() {
     }
     updateConfigDisplay();
     
-    // Wyczyść bufor pytań, aby wymusić ich ponowne załadowanie
+    // Wyczyść bufor pytań i resetuj stan quizu
     quizState.questions = [];
+    quizState.selectedAnswer = null;
+    quizState.currentQuestionIndex = 0;
+    quizState.score = 0;
+    quizState.quizFinished = false;
     
     // Start quiz again
     startQuiz();
@@ -464,7 +475,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Event listeners
     elements.startBtn.addEventListener('click', startQuiz);
     elements.nextBtn.addEventListener('click', nextQuestion);
+    
+    // Upewnij się, że oba przyciski restart mają nasłuchiwacze
     elements.restartBtn.addEventListener('click', restartQuiz);
+    
+    // Jeśli istnieje drugi przycisk restart w kontenerze wyników, dodaj mu również nasłuchiwacz
+    const resultContainerRestartBtn = document.querySelector('#result-container #restart-btn');
+    if (resultContainerRestartBtn && resultContainerRestartBtn !== elements.restartBtn) {
+        resultContainerRestartBtn.addEventListener('click', restartQuiz);
+        logWithTimestamp('Dodano nasłuchiwacz do drugiego przycisku restart');
+    }
     
     // Poprawa adresowania dla opcji na urządzeniach mobilnych
     const options = elements.optionsContainer.querySelectorAll('.option');
@@ -660,6 +680,10 @@ function showResults() {
     
     elements.scoreDisplay.textContent = `${quizState.score}/${totalQuestions}`;
     elements.percentageDisplay.textContent = `${scorePercentage}%`;
+    
+    // Resetowanie kolorów paska postępu przed ustawieniem nowego
+    elements.resultsProgress.style.backgroundColor = '';
+    elements.resultsProgress.classList.remove('bg-danger', 'bg-warning', 'bg-success');
     
     // Animate results progress bar
     elements.resultsProgress.style.transition = 'width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
