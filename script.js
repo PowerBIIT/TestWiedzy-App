@@ -34,8 +34,26 @@ const elements = {
     
     // Nowe elementy konfiguracyjne
     currentFile: document.getElementById('current-file'),
-    currentCount: document.getElementById('current-count')
+    currentCount: document.getElementById('current-count'),
+    resultContainer: document.getElementById('result-container'),
+    scoreDisplay: document.getElementById('score-display'),
+    percentageDisplay: document.getElementById('percentage-display'),
+    resultsProgress: document.getElementById('results-progress')
 };
+
+// Na początku pliku dodaję tablicę z komunikatami motywacyjnymi
+const motivationalMessages = [
+    "Świetnie! Tak trzymaj!",
+    "Doskonale! Jesteś na dobrej drodze!",
+    "Brawo! Kontynuuj w tym tempie!",
+    "Fantastycznie! Robisz postępy!",
+    "Wspaniale! Twoja wiedza jest imponująca!",
+    "Niesamowite! Widać, że się uczysz!",
+    "Dokładnie tak! Dobra robota!",
+    "Perfekcyjnie! Masz to opanowane!",
+    "Znakomicie! Idzie Ci coraz lepiej!",
+    "Rewelacyjnie! Wiedza sama wchodzi do głowy!"
+];
 
 /**
  * Funkcja do logowania z timestampem
@@ -218,9 +236,48 @@ function loadQuestion() {
     // Update score
     elements.scoreElement.textContent = `Wynik: ${quizState.score}`;
     
-    // Update progress bar
+    // Update progress bar with animation
     const progress = (quizState.currentQuestionIndex / quizState.questions.length) * 100;
+    elements.progressBar.style.transition = 'width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
     elements.progressBar.style.width = `${progress}%`;
+    
+    // Zmiana koloru paska postępu w zależności od progresu
+    if (progress < 30) {
+        elements.progressBar.style.backgroundColor = '#007bff'; // niebieski
+    } else if (progress < 70) {
+        elements.progressBar.style.backgroundColor = '#28a745'; // zielony
+    } else {
+        elements.progressBar.style.backgroundColor = '#ffc107'; // żółty
+    }
+    
+    // Dodanie emoji do paska postępu
+    const progressEmoji = document.getElementById('progress-emoji');
+    if (!progressEmoji) {
+        const emoji = document.createElement('div');
+        emoji.id = 'progress-emoji';
+        emoji.style.position = 'absolute';
+        emoji.style.top = '-25px';
+        emoji.style.fontSize = '20px';
+        emoji.style.transition = 'left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        emoji.innerHTML = '🏃';
+        elements.progressBar.parentElement.style.position = 'relative';
+        elements.progressBar.parentElement.appendChild(emoji);
+    }
+    
+    // Aktualizacja pozycji emoji
+    const emoji = document.getElementById('progress-emoji');
+    emoji.style.left = `${progress}%`;
+    
+    // Zmiana emoji w zależności od progresu
+    if (progress < 30) {
+        emoji.innerHTML = '🏃';
+    } else if (progress < 70) {
+        emoji.innerHTML = '🚶';
+    } else if (progress < 95) {
+        emoji.innerHTML = '👟';
+    } else {
+        emoji.innerHTML = '🏁';
+    }
     
     // Clear previous options
     elements.optionsContainer.innerHTML = '';
@@ -268,6 +325,10 @@ function selectAnswer(answerId) {
         quizState.score++;
         elements.scoreElement.textContent = `Wynik: ${quizState.score}`;
         logWithTimestamp(`Odpowiedź poprawna! Nowy wynik: ${quizState.score}`);
+        
+        // Dodane efekty motywacyjne przy poprawnej odpowiedzi
+        showConfetti();
+        showMotivationalMessage();
     } else {
         logWithTimestamp(`Odpowiedź niepoprawna. Poprawna odpowiedź to: ${question.correctAnswer}`);
     }
@@ -352,6 +413,9 @@ function finishQuiz() {
         elements.finalProgressBar.classList.add('bg-success');
         logWithTimestamp('Wynik powyżej 75% - zielony pasek postępu');
     }
+    
+    // Show results
+    showResults();
 }
 
 /**
@@ -425,4 +489,230 @@ function logWithTimestamp(message, type = 'info') {
     
     logElement.appendChild(entry);
     logElement.scrollTop = logElement.scrollHeight;
+}
+
+// Funkcja do pokazywania konfetti
+function showConfetti() {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'confetti-canvas';
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = '1000';
+    document.body.appendChild(canvas);
+    
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    const particles = [];
+    const particleCount = 100;
+    const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#4CAF50', '#8BC34A'];
+    
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height - canvas.height;
+            this.size = Math.random() * 8 + 4;
+            this.weight = Math.random() * 2 + 0.1;
+            this.color = colors[Math.floor(Math.random() * colors.length)];
+            this.directionX = Math.random() * 1 - 0.5;
+        }
+        
+        update() {
+            this.y += this.weight;
+            this.x += this.directionX;
+            
+            if (this.y > canvas.height) {
+                this.y = -10;
+                this.x = Math.random() * canvas.width;
+                this.weight = Math.random() * 2 + 0.1;
+                this.directionX = Math.random() * 1 - 0.5;
+            }
+        }
+        
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+        }
+    }
+    
+    function init() {
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+    }
+    
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        for (let i = 0; i < particles.length; i++) {
+            particles[i].update();
+            particles[i].draw();
+        }
+        
+        requestAnimationFrame(animate);
+    }
+    
+    init();
+    animate();
+    
+    // Usuń konfetti po 3 sekundach
+    setTimeout(() => {
+        document.body.removeChild(canvas);
+    }, 3000);
+}
+
+// Funkcja do wyświetlania motywacyjnego komunikatu
+function showMotivationalMessage() {
+    const message = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+    
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('motivational-message');
+    messageElement.textContent = message;
+    messageElement.style.position = 'fixed';
+    messageElement.style.top = '30%';
+    messageElement.style.left = '50%';
+    messageElement.style.transform = 'translate(-50%, -50%)';
+    messageElement.style.backgroundColor = 'rgba(40, 167, 69, 0.9)';
+    messageElement.style.color = 'white';
+    messageElement.style.padding = '15px 30px';
+    messageElement.style.borderRadius = '10px';
+    messageElement.style.fontSize = '24px';
+    messageElement.style.fontWeight = 'bold';
+    messageElement.style.zIndex = '1001';
+    messageElement.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+    messageElement.style.animation = 'fadeInOut 2s ease';
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            30% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+        }
+    `;
+    document.head.appendChild(style);
+    document.body.appendChild(messageElement);
+    
+    // Usuń komunikat po 2 sekundach
+    setTimeout(() => {
+        document.body.removeChild(messageElement);
+    }, 2000);
+}
+
+/**
+ * Show results screen
+ */
+function showResults() {
+    logWithTimestamp('Wyświetlanie ekranu wyników');
+    
+    elements.quizContainer.classList.add('d-none');
+    elements.resultContainer.classList.remove('d-none');
+    
+    const totalQuestions = quizState.questions.length;
+    const scorePercentage = Math.round((quizState.score / totalQuestions) * 100);
+    
+    elements.scoreDisplay.textContent = `${quizState.score}/${totalQuestions}`;
+    elements.percentageDisplay.textContent = `${scorePercentage}%`;
+    
+    // Animate results progress bar
+    elements.resultsProgress.style.transition = 'width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    setTimeout(() => {
+        elements.resultsProgress.style.width = `${scorePercentage}%`;
+    }, 100);
+    
+    // Zmień kolor paska wyników w zależności od wyniku
+    if (scorePercentage < 40) {
+        elements.resultsProgress.style.backgroundColor = '#dc3545'; // czerwony
+    } else if (scorePercentage < 70) {
+        elements.resultsProgress.style.backgroundColor = '#ffc107'; // żółty
+    } else {
+        elements.resultsProgress.style.backgroundColor = '#28a745'; // zielony
+    }
+    
+    // Wyświetl odpowiednią wiadomość i efekt w zależności od wyniku
+    let resultMessage = '';
+    if (scorePercentage >= 90) {
+        resultMessage = 'Doskonały wynik! Jesteś ekspertem!';
+        // Dodaj efekt konfetti dla wysokiego wyniku
+        showConfetti();
+        showTrophy();
+    } else if (scorePercentage >= 70) {
+        resultMessage = 'Bardzo dobry wynik! Prawie wszystko wiesz!';
+        showConfetti();
+    } else if (scorePercentage >= 50) {
+        resultMessage = 'Dobry wynik! Nie jest źle!';
+    } else {
+        resultMessage = 'Warto jeszcze poćwiczyć. Próbuj dalej!';
+    }
+    
+    // Dodaj element z wiadomością wynikową
+    const resultMessageElement = document.createElement('p');
+    resultMessageElement.classList.add('mt-3', 'text-center', 'lead');
+    resultMessageElement.textContent = resultMessage;
+    
+    // Sprawdź, czy element już istnieje
+    const existingMessage = elements.resultContainer.querySelector('.result-message');
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+    
+    resultMessageElement.classList.add('result-message');
+    elements.resultContainer.querySelector('.card-body').appendChild(resultMessageElement);
+    
+    logWithTimestamp(`Wyniki: ${quizState.score}/${totalQuestions} (${scorePercentage}%)`);
+}
+
+// Funkcja wyświetlająca animowany puchar dla najlepszych wyników
+function showTrophy() {
+    const trophy = document.createElement('div');
+    trophy.id = 'trophy';
+    trophy.innerHTML = '🏆';
+    trophy.style.position = 'fixed';
+    trophy.style.top = '20%';
+    trophy.style.left = '50%';
+    trophy.style.transform = 'translate(-50%, -50%) scale(0)';
+    trophy.style.fontSize = '100px';
+    trophy.style.zIndex = '1001';
+    trophy.style.textShadow = '0 0 20px rgba(255, 215, 0, 0.8)';
+    trophy.style.animation = 'trophyAnimation 3s ease forwards';
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes trophyAnimation {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); }
+            40% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); }
+            50% { transform: translate(-50%, -50%) scale(1) rotate(-10deg); }
+            60% { transform: translate(-50%, -50%) scale(1.1) rotate(5deg); }
+            70% { transform: translate(-50%, -50%) scale(1) rotate(-5deg); }
+            80% { transform: translate(-50%, -50%) scale(1.05) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+        }
+    `;
+    document.head.appendChild(style);
+    document.body.appendChild(trophy);
+    
+    setTimeout(() => {
+        trophy.style.animation = 'bounceOut 1s forwards';
+        const bounceStyle = document.createElement('style');
+        bounceStyle.textContent = `
+            @keyframes bounceOut {
+                0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+                100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(bounceStyle);
+        
+        setTimeout(() => {
+            document.body.removeChild(trophy);
+        }, 1000);
+    }, 4000);
 } 
