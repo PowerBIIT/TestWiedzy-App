@@ -30,7 +30,11 @@ const elements = {
     
     progressBar: document.getElementById('progress-bar'),
     finalScore: document.getElementById('final-score'),
-    finalProgressBar: document.getElementById('final-progress-bar')
+    finalProgressBar: document.getElementById('final-progress-bar'),
+    
+    // Nowe elementy konfiguracyjne
+    currentFile: document.getElementById('current-file'),
+    currentCount: document.getElementById('current-count')
 };
 
 /**
@@ -49,6 +53,14 @@ function showError(message) {
  * Initialize the quiz application
  */
 async function initQuiz() {
+    // Przygotuj przykładowe pliki
+    if (window.quizAPI && window.quizAPI.createSampleFiles) {
+        await window.quizAPI.createSampleFiles();
+    }
+    
+    // Pobierz konfigurację
+    updateConfigDisplay();
+    
     // Set up event listeners
     elements.startBtn.addEventListener('click', startQuiz);
     elements.nextBtn.addEventListener('click', nextQuestion);
@@ -64,6 +76,23 @@ async function initQuiz() {
     } catch (error) {
         console.error('Failed to preload questions:', error);
         // Nie pokazujemy błędu tutaj, spróbujemy załadować ponownie podczas startQuiz
+    }
+}
+
+/**
+ * Aktualizuje wyświetlanie informacji o konfiguracji
+ */
+function updateConfigDisplay() {
+    if (window.quizConfig) {
+        const config = window.quizConfig.getConfig();
+        
+        if (elements.currentFile) {
+            elements.currentFile.textContent = config.questionFile || 'Pytania.md';
+        }
+        
+        if (elements.currentCount) {
+            elements.currentCount.textContent = config.questionCount || 20;
+        }
     }
 }
 
@@ -248,6 +277,9 @@ function finishQuiz() {
 function restartQuiz() {
     // Reset UI
     elements.finalProgressBar.classList.remove('bg-danger', 'bg-warning', 'bg-success');
+    
+    // Aktualizuj konfigurację (w przypadku zmian)
+    updateConfigDisplay();
     
     // Start quiz again
     startQuiz();

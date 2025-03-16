@@ -1,80 +1,103 @@
 # Quiz Application
 
-A simple quiz application that loads questions from a Markdown file and presents them to the user with four options.
+Aplikacja quizowa umożliwiająca ładowanie pytań z plików Markdown i ich prezentację użytkownikowi z czterema opcjami odpowiedzi.
 
 ## Features
 
-- Loads questions from `Pytania.md`
-- Presents one question at a time with 4 answer options
-- Provides immediate feedback on answer selection
-- Tracks score throughout the quiz
-- Shows final results with percentage score
-- Responsive design works on desktop and mobile devices
+- Ładowanie pytań z różnych plików w formacie Markdown (.md)
+- Prezentacja jednego pytania na raz z 4 opcjami odpowiedzi
+- Natychmiastowa informacja zwrotna po wybraniu odpowiedzi
+- Śledzenie wyniku podczas całego quizu
+- Wyświetlanie końcowych wyników z procentowym wynikiem
+- Responsywny design działający na urządzeniach stacjonarnych i mobilnych
+- **Panel administracyjny** do konfiguracji i zarządzania testami
+- Możliwość wyboru **źródła pytań** i **liczby pytań** w quizie
+- Ładowanie pytań z wielu plików i zarządzanie nimi
 
-## How to Run
+## Jak uruchomić aplikację
 
-1. Make sure all the project files are in the same directory:
-   - `index.html`
-   - `styles.css`
-   - `script.js`
-   - `questions.js`
-   - `Pytania.md`
+1. Upewnij się, że wszystkie pliki projektu znajdują się w tym samym katalogu:
+   - `index.html` - Główna strona quizu
+   - `admin.html` - Panel administracyjny
+   - `styles.css` - Style CSS
+   - `script.js` - Główny plik JavaScript z logiką quizu
+   - `questions.js` - Moduł JavaScript do ładowania i parsowania pytań
+   - `config.js` - Moduł zarządzania konfiguracją
+   - `admin.js` - Logika panelu administracyjnego
+   - `Pytania.md` - Plik źródłowy z pytaniami w formacie Markdown
 
-2. Open the `index.html` file in a web browser.
+2. Otwórz plik `index.html` w przeglądarce internetowej.
    
-   > **Note:** Due to browser security restrictions when loading local files, you may need to run the app using a local development server.
+   > **Uwaga:** Ze względu na ograniczenia bezpieczeństwa przeglądarki podczas ładowania lokalnych plików, może być konieczne uruchomienie aplikacji za pomocą lokalnego serwera deweloperskiego.
 
-3. To use a local development server, you can use one of these methods:
+3. Aby użyć lokalnego serwera deweloperskiego, możesz zastosować jedną z tych metod:
 
-   - **Using Python**:
+   - **Użycie Pythona**:
      ```
-     # For Python 3.x
+     # Dla Pythona 3.x
      python -m http.server
      ```
-     Then open http://localhost:8000 in your browser.
+     Następnie otwórz http://localhost:8000 w przeglądarce.
 
-   - **Using Node.js**:
+   - **Użycie Node.js**:
      ```
-     # Install http-server globally if you haven't already
+     # Zainstaluj http-server globalnie, jeśli jeszcze tego nie zrobiłeś
      npm install -g http-server
      
-     # Run the server
+     # Uruchom serwer
      http-server
      ```
-     Then open http://localhost:8080 in your browser.
+     Następnie otwórz http://localhost:8080 w przeglądarce.
 
-## Project Structure
+## Panel Administracyjny
 
-- `index.html`: Main HTML file with the application structure
-- `styles.css`: CSS styling for the application
-- `script.js`: Main JavaScript file with quiz logic
-- `questions.js`: JavaScript module to load and parse questions
-- `Pytania.md`: Source file with quiz questions in Markdown format
+Nowa funkcja panelu administracyjnego (dostępna pod adresem `admin.html`) pozwala na:
 
-## Question Format
+1. **Konfigurację quizu**:
+   - Wybór pliku z pytaniami
+   - Określenie liczby pytań w quizie
+   - Włączenie/wyłączenie losowej kolejności pytań
 
-The `Pytania.md` file should contain questions in the following format:
+2. **Zarządzanie plikami z pytaniami**:
+   - Przeglądanie dostępnych plików
+   - Dodawanie nowych plików z pytaniami
+   - Edytowanie istniejących plików
+
+## Format pytań
+
+Plik `Pytania.md` powinien zawierać pytania w następującym formacie:
 
 ```
-"Question Text",Answer A,Answer B,Answer C,Answer D,Correct Answer Letter
+"Treść pytania",Odpowiedź A,Odpowiedź B,Odpowiedź C,Odpowiedź D,Poprawna odpowiedź
 ```
 
-For example:
+Na przykład:
 
 ```
 "1. Jak miał na imię główny bohater utworu?",Jan,Janko,Jaś,Janek,B
 ```
 
-Where the last column (B) indicates that the correct answer is the second option (Janko).
+Gdzie ostatnia kolumna (B) wskazuje, że prawidłową odpowiedzią jest druga opcja (Janko).
 
-## Customization
+## Dostosowanie
 
-To modify the quiz:
+Aby zmodyfikować quiz:
 
-1. Edit the `Pytania.md` file to change the questions and answers
-2. Adjust the styles in `styles.css` to change the appearance
-3. Modify the logic in `script.js` to change the behavior of the quiz
+1. Edytuj plik `Pytania.md` (lub dodaj nowe pliki przez panel administracyjny), aby zmienić pytania i odpowiedzi
+2. Dostosuj style w `styles.css`, aby zmienić wygląd
+3. Zmodyfikuj logikę w `script.js`, aby zmienić zachowanie quizu
 
-## License
+## Struktura projektu
 
-This project is open source and available under the MIT License. 
+- `index.html` - Główny plik HTML ze strukturą aplikacji
+- `admin.html` - Panel administracyjny do zarządzania quizem
+- `styles.css` - Stylizacja CSS aplikacji
+- `script.js` - Główny plik JavaScript z logiką quizu
+- `questions.js` - Moduł JavaScript do ładowania i parsowania pytań
+- `config.js` - Moduł zarządzania konfiguracją
+- `admin.js` - Logika panelu administracyjnego
+- `Pytania.md` - Plik źródłowy z pytaniami w formacie Markdown
+
+## Licencja
+
+Ten projekt jest open source i dostępny na licencji MIT. 
