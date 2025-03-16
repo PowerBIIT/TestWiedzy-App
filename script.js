@@ -279,21 +279,42 @@ function loadQuestion() {
     // Clear previous options
     elements.optionsContainer.innerHTML = '';
     
-    // Create option buttons
-    logWithTimestamp(`Tworzenie przycisków opcji dla pytania ${quizState.currentQuestionIndex + 1}`);
-    question.options.forEach((option) => {
+    // Add options
+    question.options.forEach(option => {
         const button = document.createElement('button');
         button.classList.add('btn', 'btn-outline-primary', 'option');
         button.textContent = `${option.id}. ${option.text}`;
         button.dataset.id = option.id;
         
-        button.addEventListener('click', () => selectAnswer(option.id));
+        // Add click handler
+        button.addEventListener('click', function() {
+            selectAnswer(this.dataset.id);
+        });
+        
+        // Add touch events for mobile
+        if (isMobileDevice()) {
+            button.addEventListener('touchstart', function() {
+                this.classList.add('active-touch');
+            });
+            
+            button.addEventListener('touchend', function() {
+                this.classList.remove('active-touch');
+                selectAnswer(this.dataset.id);
+            });
+            
+            button.addEventListener('touchmove', function() {
+                this.classList.remove('active-touch');
+            });
+        }
         
         elements.optionsContainer.appendChild(button);
     });
     
-    // Hide the next button
+    // Hide next button
     elements.nextBtn.classList.add('d-none');
+    
+    // Reset selected answer
+    quizState.selectedAnswer = null;
     
     logWithTimestamp(`Pytanie ${quizState.currentQuestionIndex + 1} zostało załadowane`);
 }
@@ -341,7 +362,10 @@ function selectAnswer(answerId) {
         // Style the selected and correct options
         if (optionId === answerId) {
             option.classList.add(isCorrect ? 'correct' : 'incorrect');
-        } else if (optionId === question.correctAnswer) {
+        }
+        
+        // Zawsze pokaż poprawną odpowiedź
+        if (optionId === question.correctAnswer) {
             option.classList.add('correct');
         }
     });
@@ -456,49 +480,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isMobileDevice()) {
         document.body.classList.add('mobile-device');
         logWithTimestamp('Wykryto urządzenie mobilne: ' + navigator.userAgent);
-        
-        // Poprawiamy obsługę zdarzeń dotykowych dla urządzeń mobilnych
-        const optionElements = document.querySelectorAll('.option');
-        optionElements.forEach(option => {
-            option.addEventListener('touchstart', function(e) {
-                this.classList.add('active-touch');
-            });
-            
-            option.addEventListener('touchend', function(e) {
-                this.classList.remove('active-touch');
-                const answerId = this.dataset.id;
-                // Niewielkie opóźnienie, aby zapobiec przypadkowym kliknięciom
-                setTimeout(() => selectAnswer(answerId), 50);
-            });
-            
-            // Anulowanie domyślnego zachowania, aby zapobiec podwójnemu klikaniu
-            option.addEventListener('touchmove', function(e) {
-                this.classList.remove('active-touch');
-            });
-        });
     }
     
+    // Inicjalizacja quizu
     initQuiz();
     
-    // Event listeners
+    // Event listeners dla głównych przycisków
     elements.startBtn.addEventListener('click', startQuiz);
     elements.nextBtn.addEventListener('click', nextQuestion);
     elements.restartBtn.addEventListener('click', restartQuiz);
-    
-    // Poprawa adresowania dla opcji na urządzeniach mobilnych
-    const options = elements.optionsContainer.querySelectorAll('.option');
-    options.forEach(option => {
-        // Dodanie atrybutu data-id dla identyfikacji opcji
-        const optionText = option.textContent.trim();
-        if (optionText.startsWith('Odpowiedź A')) option.dataset.id = 'A';
-        if (optionText.startsWith('Odpowiedź B')) option.dataset.id = 'B';
-        if (optionText.startsWith('Odpowiedź C')) option.dataset.id = 'C';
-        if (optionText.startsWith('Odpowiedź D')) option.dataset.id = 'D';
-        
-        option.addEventListener('click', function() {
-            selectAnswer(this.dataset.id);
-        });
-    });
 });
 
 function initLogging() {
