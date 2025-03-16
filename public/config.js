@@ -4,7 +4,7 @@
 
 // Domyślna konfiguracja
 const defaultConfig = {
-    questionFile: 'Janko.csv',
+    questionFile: 'Pytania.csv',
     questionCount: 20,
     shuffleQuestions: true
 };
