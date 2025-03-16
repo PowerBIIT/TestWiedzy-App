@@ -134,7 +134,7 @@ function updateConfigDisplay() {
         logWithTimestamp(`Aktualizacja wyświetlania konfiguracji: ${JSON.stringify(config)}`);
         
         if (elements.currentFile) {
-            elements.currentFile.textContent = config.questionFile || 'Pytania.csv';
+            elements.currentFile.textContent = config.questionFile || 'Janko.csv';
         }
         
         if (elements.currentCount) {
@@ -149,10 +149,10 @@ function updateConfigDisplay() {
  * Start the quiz
  */
 async function startQuiz() {
-    logWithTimestamp('Rozpoczynanie quizu');
+    logWithTimestamp('Rozpoczynanie quizu...');
     
-    // Pobierz i pokaż aktualną konfigurację
-    const currentConfig = window.quizConfig ? window.quizConfig.getConfig() : { questionFile: 'Pytania.csv' };
+    // Pobierz aktualną konfigurację
+    const currentConfig = window.quizConfig ? window.quizConfig.getConfig() : { questionFile: 'Janko.csv' };
     logWithTimestamp(`Konfiguracja przy starcie quizu: ${JSON.stringify(currentConfig)}`);
     logWithTimestamp(`Używany plik z pytaniami: ${currentConfig.questionFile}`);
     
@@ -378,4 +378,51 @@ function restartQuiz() {
 }
 
 // Initialize the quiz when the document is loaded
-document.addEventListener('DOMContentLoaded', initQuiz); 
+document.addEventListener('DOMContentLoaded', initQuiz);
+
+function initLogging() {
+    // Upewnij się, że mamy element dla logów
+    if (!document.getElementById('admin-log')) {
+        console.log("Element admin-log nie istnieje - brak logowania w interfejsie");
+        return;
+    }
+    
+    // Nadpisz konsolę tylko jeśli jesteśmy w panelu admin
+    const oldLog = console.log;
+    const oldWarn = console.warn;
+    const oldError = console.error;
+    
+    console.log = function(message) {
+        logWithTimestamp(message, 'info');
+        oldLog.apply(console, arguments);
+    };
+    
+    console.warn = function(message) {
+        logWithTimestamp(message, 'warn');
+        oldWarn.apply(console, arguments);
+    };
+    
+    console.error = function(message) {
+        logWithTimestamp(message, 'error');
+        oldError.apply(console, arguments);
+    };
+    
+    logWithTimestamp('Inicjalizacja systemu logowania');
+}
+
+// Funkcja pomocnicza do logowania z timestampem
+function logWithTimestamp(message, type = 'info') {
+    const logElement = document.getElementById('admin-log');
+    if (!logElement) return;
+    
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString('pl-PL', { hour12: false }) + '.' + 
+                    String(now.getMilliseconds()).padStart(3, '0');
+    
+    const entry = document.createElement('div');
+    entry.className = `log-entry log-${type}`;
+    entry.innerHTML = `<span class="log-time">${timestamp}</span> <span class="log-msg">${message}</span>`;
+    
+    logElement.appendChild(entry);
+    logElement.scrollTop = logElement.scrollHeight;
+} 

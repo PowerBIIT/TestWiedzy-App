@@ -4,7 +4,7 @@
 
 // Domyślna konfiguracja
 const defaultConfig = {
-    questionFile: 'Pytania.csv',
+    questionFile: 'Janko.csv',
     questionCount: 20,
     shuffleQuestions: true
 };
@@ -165,14 +165,14 @@ function findAvailableQuestionFiles() {
     
     if (!isLocalStorageAvailable()) {
         logWithTimestamp('Nie można wyszukać plików - localStorage niedostępny', 'error');
-        return ['Pytania.csv'];
+        return ['Janko.csv'];
     }
     
     try {
-        // Sprawdź, czy domyślny plik istnieje
-        if (!localStorage.getItem('file_Pytania.csv')) {
-            logWithTimestamp('Tworzenie domyślnego pliku Pytania.csv');
-            localStorage.setItem('file_Pytania.csv', `"1. Przykładowe pytanie?",Odpowiedź A,Odpowiedź B,Odpowiedź C,Odpowiedź D,A`);
+        // Zawsze dodaj domyślny plik Janko.csv do listy, nawet jeśli nie ma go w localStorage
+        if (!files.includes('Janko.csv')) {
+            files.push('Janko.csv');
+            logWithTimestamp('Dodano domyślny plik Janko.csv do listy dostępnych plików');
         }
         
         // Wyszukaj pliki w localStorage
@@ -180,8 +180,10 @@ function findAvailableQuestionFiles() {
             const key = localStorage.key(i);
             if (key.startsWith('file_') && key.endsWith('.csv')) {
                 const filename = key.substring(5);
-                files.push(filename);
-                logWithTimestamp(`Znaleziono plik: ${filename}`);
+                if (!files.includes(filename)) {
+                    files.push(filename);
+                    logWithTimestamp(`Znaleziono plik w localStorage: ${filename}`);
+                }
             }
         }
         
@@ -189,7 +191,7 @@ function findAvailableQuestionFiles() {
         return files;
     } catch (error) {
         logWithTimestamp('Błąd podczas wyszukiwania plików: ' + error.message, 'error');
-        return ['Pytania.csv'];
+        return ['Janko.csv'];
     }
 }
 

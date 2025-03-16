@@ -132,8 +132,8 @@ const staticQuizExtraData = {
 async function loadQuestions() {
     try {
         // Pobierz aktualną konfigurację
-        const config = window.quizConfig ? window.quizConfig.getConfig() : { questionFile: 'Pytania.csv', questionCount: 20 };
-        const filename = config.questionFile || 'Pytania.csv';
+        const config = window.quizConfig ? window.quizConfig.getConfig() : { questionFile: 'Janko.csv', questionCount: 20 };
+        const filename = config.questionFile || 'Janko.csv';
         
         logWithTimestamp(`Rozpoczynam ładowanie pytań z pliku: ${filename}`);
         
@@ -156,16 +156,36 @@ async function loadQuestions() {
                     throw new Error(`Nie udało się załadować pliku ${filename}`);
                 }
                 text = await response.text();
+                
+                // Zapisz zawartość pliku do localStorage dla przyszłego użycia
+                try {
+                    localStorage.setItem(localStorageKey, text);
+                    logWithTimestamp(`Zapisano zawartość pliku ${filename} do localStorage dla przyszłego użycia`);
+                } catch (saveError) {
+                    logWithTimestamp(`Nie udało się zapisać zawartości pliku ${filename} do localStorage: ${saveError.message}`, 'warn');
+                }
+                
                 logWithTimestamp(`Pomyślnie pobrano plik ${filename} przez fetch, długość tekstu: ${text.length} znaków`);
             } catch (fetchError) {
                 logWithTimestamp(`Nie udało się załadować pliku ${filename} przez fetch: ${fetchError.message}`, 'warn');
                 
                 // Użyj statycznych danych w przypadku problemów z fetch
-                if (staticQuizExtraData[filename]) {
+                if (filename === 'Janko.csv') {
+                    logWithTimestamp(`Używam statycznych danych dla domyślnego pliku ${filename}`);
+                    text = staticQuizData;
+                    
+                    // Zapisz statyczne dane do localStorage, aby były dostępne w przyszłości
+                    try {
+                        localStorage.setItem(localStorageKey, text);
+                        logWithTimestamp(`Zapisano domyślną zawartość pliku ${filename} do localStorage`);
+                    } catch (saveError) {
+                        logWithTimestamp(`Nie udało się zapisać domyślnej zawartości pliku ${filename} do localStorage: ${saveError.message}`, 'warn');
+                    }
+                } else if (staticQuizExtraData[filename]) {
                     logWithTimestamp(`Używam statycznych danych dla pliku ${filename} z staticQuizExtraData`);
                     text = staticQuizExtraData[filename];
                 } else {
-                    logWithTimestamp(`Używam domyślnych statycznych danych dla pliku ${filename}`);
+                    logWithTimestamp(`Brak danych dla pliku ${filename}, używam domyślnych statycznych danych`);
                     text = staticQuizData;
                 }
             }

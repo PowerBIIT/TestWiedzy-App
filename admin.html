@@ -26,7 +26,7 @@
                         <div class="col-md-6">
                             <label for="question-file" class="form-label">Plik z pytaniami</label>
                             <select id="question-file" class="form-select">
-                                <option value="Pytania.csv">Pytania.csv (domyślny)</option>
+                                <option value="Janko.csv">Janko.csv (domyślny)</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -64,40 +64,6 @@
             </div>
         </div>
         
-        <!-- Uproszczone zarządzanie plikami -->
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                <h2 class="h5 mb-0">Edycja pliku z pytaniami</h2>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label for="edit-file-select" class="form-label">Wybierz plik do edycji</label>
-                    <select id="edit-file-select" class="form-select">
-                        <option value="Pytania.csv">Pytania.csv (domyślny)</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="edit-content" class="form-label">Zawartość pliku</label>
-                    <textarea id="edit-content" class="form-control" rows="10" style="font-family: monospace;"></textarea>
-                    <div class="form-text">Format: "Pytanie",Odp A,Odp B,Odp C,Odp D,Poprawna odpowiedź (A/B/C/D)</div>
-                </div>
-                <div class="mb-3 d-flex justify-content-between">
-                    <button type="button" id="load-file" class="btn btn-secondary">Wczytaj zawartość</button>
-                    <button type="button" id="save-file" class="btn btn-success">Zapisz zmiany</button>
-                </div>
-                
-                <hr class="my-4">
-                
-                <div class="mb-3">
-                    <label for="new-file" class="form-label">Dodaj nowy plik</label>
-                    <div class="input-group">
-                        <input type="text" id="new-file" class="form-control" placeholder="nazwa_pliku.csv">
-                        <button type="button" id="create-file" class="btn btn-outline-success">Utwórz</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
         <!-- Sekcja usuwania plików z pytaniami -->
         <div class="card mb-4">
             <div class="card-header bg-danger text-white">
@@ -113,7 +79,7 @@
                 <button type="button" id="delete-file-btn" class="btn btn-danger">Usuń plik</button>
                 <div id="delete-status" class="alert mt-3 d-none"></div>
                 <div class="form-text mt-2">
-                    <strong>Uwaga:</strong> Domyślny plik (Pytania.csv) nie może zostać usunięty.
+                    <strong>Uwaga:</strong> Domyślny plik (Janko.csv) nie może zostać usunięty.
                 </div>
             </div>
         </div>
@@ -156,14 +122,6 @@
                 shuffleQuestions: document.getElementById('shuffle-questions'),
                 saveConfig: document.getElementById('save-config'),
                 resetConfig: document.getElementById('reset-config'),
-                
-                editFileSelect: document.getElementById('edit-file-select'),
-                editContent: document.getElementById('edit-content'),
-                loadFile: document.getElementById('load-file'),
-                saveFile: document.getElementById('save-file'),
-                
-                newFile: document.getElementById('new-file'),
-                createFile: document.getElementById('create-file'),
                 
                 // Nowe elementy dla wgrywania plików
                 fileUpload: document.getElementById('file-upload'),
@@ -274,7 +232,7 @@
             function loadConfig() {
                 logWithTimestamp('Wczytywanie konfiguracji');
                 const config = window.quizConfig.getConfig();
-                elements.questionFile.value = config.questionFile || 'Pytania.csv';
+                elements.questionFile.value = config.questionFile || 'Janko.csv';
                 elements.questionCount.value = config.questionCount || 20;
                 elements.shuffleQuestions.checked = !!config.shuffleQuestions;
                 logWithTimestamp(`Wczytano konfigurację: ${JSON.stringify(config)}`);
@@ -307,7 +265,6 @@
                 logWithTimestamp('Wczytywanie dostępnych plików');
                 // Wyczyść listy select
                 elements.questionFile.innerHTML = '';
-                elements.editFileSelect.innerHTML = '';
                 elements.deleteFileSelect.innerHTML = '';
                 
                 // Pobierz pliki
@@ -324,12 +281,7 @@
                     const opt2 = document.createElement('option');
                     opt2.value = file;
                     opt2.textContent = file;
-                    elements.editFileSelect.appendChild(opt2);
-                    
-                    const opt3 = document.createElement('option');
-                    opt3.value = file;
-                    opt3.textContent = file;
-                    elements.deleteFileSelect.appendChild(opt3);
+                    elements.deleteFileSelect.appendChild(opt2);
                 });
                 
                 // Ustaw aktualnie wybrany plik
@@ -338,84 +290,6 @@
                     elements.questionFile.value = config.questionFile;
                 }
             }
-            
-            // Wczytaj zawartość pliku
-            elements.loadFile.addEventListener('click', function() {
-                const fileName = elements.editFileSelect.value;
-                if (!fileName) {
-                    logWithTimestamp('Próba wczytania zawartości, ale nie wybrano pliku', 'warn');
-                    return;
-                }
-                
-                logWithTimestamp(`Wczytywanie zawartości pliku: ${fileName}`);
-                const content = localStorage.getItem(`file_${fileName}`);
-                if (content) {
-                    elements.editContent.value = content;
-                    logWithTimestamp(`Wczytano zawartość pliku: ${fileName}, długość: ${content.length} znaków`);
-                } else {
-                    logWithTimestamp(`Nie udało się wczytać zawartości pliku: ${fileName}`, 'error');
-                    alert('Nie udało się wczytać zawartości pliku!');
-                }
-            });
-            
-            // Zapisz zawartość pliku
-            elements.saveFile.addEventListener('click', function() {
-                const fileName = elements.editFileSelect.value;
-                const content = elements.editContent.value;
-                
-                if (!fileName) {
-                    logWithTimestamp('Próba zapisania zawartości, ale nie wybrano pliku', 'warn');
-                    alert('Wybierz plik do zapisania!');
-                    return;
-                }
-                
-                logWithTimestamp(`Zapisywanie zawartości pliku: ${fileName}, długość: ${content.length} znaków`);
-                localStorage.setItem(`file_${fileName}`, content);
-                logWithTimestamp(`Zapisano zawartość pliku: ${fileName}`);
-                alert(`Plik ${fileName} został zapisany!`);
-            });
-            
-            // Utwórz nowy plik
-            elements.createFile.addEventListener('click', function() {
-                const fileName = elements.newFile.value.trim();
-                
-                if (!fileName) {
-                    logWithTimestamp('Próba utworzenia pliku bez podania nazwy', 'warn');
-                    alert('Podaj nazwę pliku!');
-                    return;
-                }
-                
-                if (!fileName.endsWith('.csv')) {
-                    logWithTimestamp(`Próba utworzenia pliku z nieprawidłowym rozszerzeniem: ${fileName}`, 'warn');
-                    alert('Nazwa pliku musi kończyć się na .csv');
-                    return;
-                }
-                
-                logWithTimestamp(`Tworzenie nowego pliku: ${fileName}`);
-                
-                // Sprawdź, czy plik już istnieje
-                if (localStorage.getItem(`file_${fileName}`)) {
-                    logWithTimestamp(`Plik ${fileName} już istnieje, prośba o potwierdzenie zastąpienia`, 'warn');
-                    if (!confirm(`Plik ${fileName} już istnieje. Czy chcesz go zastąpić?`)) {
-                        logWithTimestamp('Anulowano zastąpienie istniejącego pliku', 'info');
-                        return;
-                    }
-                }
-                
-                // Utwórz pusty plik
-                localStorage.setItem(`file_${fileName}`, '');
-                logWithTimestamp(`Utworzono nowy pusty plik: ${fileName}`);
-                
-                // Odśwież listy plików
-                loadAvailableFiles();
-                
-                // Wybierz nowy plik do edycji
-                elements.editFileSelect.value = fileName;
-                elements.editContent.value = '';
-                elements.newFile.value = '';
-                
-                alert(`Utworzono nowy plik: ${fileName}`);
-            });
             
             // Obsługa usuwania pliku
             elements.deleteFileBtn.addEventListener('click', function() {
@@ -430,9 +304,9 @@
                 logWithTimestamp(`Próba usunięcia pliku: ${fileName}`);
                 
                 // Nie pozwól usunąć domyślnego pliku
-                if (fileName === 'Pytania.csv') {
-                    logWithTimestamp('Próba usunięcia domyślnego pliku Pytania.csv', 'warn');
-                    showMessage(elements.deleteStatus, 'Nie można usunąć domyślnego pliku Pytania.csv', 'danger');
+                if (fileName === 'Janko.csv') {
+                    logWithTimestamp('Próba usunięcia domyślnego pliku Janko.csv', 'warn');
+                    showMessage(elements.deleteStatus, 'Nie można usunąć domyślnego pliku Janko.csv', 'danger');
                     return;
                 }
                 
@@ -450,7 +324,7 @@
                     // Jeśli usunięty plik był aktualnie wybrany w konfiguracji, zmień na domyślny
                     const config = window.quizConfig.getConfig();
                     if (config.questionFile === fileName) {
-                        window.quizConfig.updateConfig({ questionFile: 'Pytania.csv' });
+                        window.quizConfig.updateConfig({ questionFile: 'Janko.csv' });
                         logWithTimestamp(`Zaktualizowano konfigurację po usunięciu pliku: ${fileName}`);
                     }
                     

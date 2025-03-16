@@ -71,7 +71,7 @@ function loadConfig() {
         console.log('Wczytana konfiguracja:', config);
         
         if (config) {
-            elements.questionFile.value = config.questionFile || 'Pytania.csv';
+            elements.questionFile.value = config.questionFile || 'Janko.csv';
             elements.questionCount.value = config.questionCount || 20;
             elements.shuffleQuestions.checked = config.shuffleQuestions !== undefined ? config.shuffleQuestions : true;
             console.log('Formularz zaktualizowany wartościami:', {
@@ -431,8 +431,8 @@ async function getFileContent(fileName) {
     } catch (error) {
         console.error(`Błąd pobierania zawartości pliku ${fileName}:`, error);
         
-        // Jeśli to plik Pytania.md, użyj statycznych danych
-        if (fileName === 'Pytania.csv' && window.staticQuizData) {
+        // Jeśli to plik Janko.csv, użyj statycznych danych
+        if (fileName === 'Janko.csv' && window.staticQuizData) {
             adminState.fileContents[fileName] = window.staticQuizData;
             return window.staticQuizData;
         }
@@ -553,7 +553,7 @@ function validateFileName(fileName) {
 // Funkcja do tworzenia przykładowych plików
 function createSampleFiles() {
     const sampleFiles = {
-        'Pytania.csv': staticQuizData,
+        'Janko.csv': staticQuizData,
         'Pytania_literatura.csv': staticQuizExtraData['Pytania_literatura.csv'],
         'Pytania_historia.csv': staticQuizExtraData['Pytania_historia.csv']
     };
