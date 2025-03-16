@@ -31,14 +31,11 @@ const elements = {
     progressBar: document.getElementById('progress-bar'),
     finalScore: document.getElementById('final-score'),
     finalProgressBar: document.getElementById('final-progress-bar'),
+    percentageDisplay: document.getElementById('percentage-display'),
     
     // Nowe elementy konfiguracyjne
     currentFile: document.getElementById('current-file'),
-    currentCount: document.getElementById('current-count'),
-    resultContainer: document.getElementById('result-container'),
-    scoreDisplay: document.getElementById('score-display'),
-    percentageDisplay: document.getElementById('percentage-display'),
-    resultsProgress: document.getElementById('results-progress')
+    currentCount: document.getElementById('current-count')
 };
 
 // Na początku pliku dodaję tablicę z komunikatami motywacyjnymi
@@ -402,6 +399,9 @@ function finishQuiz() {
     // Update final progress bar
     elements.finalProgressBar.style.width = `${percentage}%`;
     
+    // Aktualizuj procent
+    elements.percentageDisplay.textContent = `${percentage.toFixed(0)}%`;
+    
     // Set progress bar color based on score
     if (percentage < 50) {
         elements.finalProgressBar.classList.add('bg-danger');
@@ -413,9 +413,6 @@ function finishQuiz() {
         elements.finalProgressBar.classList.add('bg-success');
         logWithTimestamp('Wynik powyżej 75% - zielony pasek postępu');
     }
-    
-    // Show results
-    showResults();
 }
 
 /**
@@ -426,6 +423,7 @@ function restartQuiz() {
     
     // Reset UI
     elements.finalProgressBar.classList.remove('bg-danger', 'bg-warning', 'bg-success');
+    elements.finalProgressBar.style.width = '0%';
     
     // Przeładuj konfigurację i zaktualizuj wyświetlanie
     if (window.quizConfig) {
@@ -436,6 +434,10 @@ function restartQuiz() {
     
     // Wyczyść bufor pytań, aby wymusić ich ponowne załadowanie
     quizState.questions = [];
+    quizState.selectedAnswer = null;
+    quizState.currentQuestionIndex = 0;
+    quizState.score = 0;
+    quizState.quizFinished = false;
     
     // Start quiz again
     startQuiz();
