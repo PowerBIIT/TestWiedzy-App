@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administracyjny Quizu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container py-4">
+        <header class="mb-4 text-center">
+            <h1>Panel Administracyjny Quizu</h1>
+            <p class="lead">Ustaw parametry quizu i zarządzaj pytaniami</p>
+        </header>
+        
+        <!-- Uproszczony formularz konfiguracji -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h5 mb-0">Konfiguracja Quizu</h2>
+            </div>
+            <div class="card-body">
+                <form id="config-form" class="mb-0">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="question-file" class="form-label">Plik z pytaniami</label>
+                            <select id="question-file" class="form-select">
+                                <option value="Janko.csv">Janko.csv (domyślny)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="question-count" class="form-label">Liczba pytań</label>
+                            <input type="number" id="question-count" class="form-control" min="1" max="100" value="20">
+                        </div>
+                        <div class="col-12 mt-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="shuffle-questions" checked>
+                                <label class="form-check-label" for="shuffle-questions">Losowa kolejność pytań</label>
+                            </div>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <button type="button" id="save-config" class="btn btn-primary">Zapisz ustawienia</button>
+                            <button type="button" id="reset-config" class="btn btn-outline-secondary ms-2">Resetuj do domyślnych</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Sekcja wgrywania plików z pytaniami -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h2 class="h5 mb-0">Wgrywanie pliku z pytaniami</h2>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="file-upload" class="form-label">Wybierz plik CSV do wgrania</label>
+                    <input class="form-control" type="file" id="file-upload" accept=".csv">
+                    <div class="form-text">Format: "Pytanie",Odp A,Odp B,Odp C,Odp D,Poprawna odpowiedź (A/B/C/D)</div>
+                </div>
+                <button type="button" id="upload-btn" class="btn btn-info">Wgraj plik</button>
+                <div id="upload-status" class="alert mt-3 d-none"></div>
+            </div>
+        </div>
+        
+        <!-- Sekcja usuwania plików z pytaniami -->
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <h2 class="h5 mb-0">Usuwanie pliku z pytaniami</h2>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="delete-file-select" class="form-label">Wybierz plik do usunięcia</label>
+                    <select id="delete-file-select" class="form-select">
+                        <!-- Opcje będą dodane dynamicznie -->
+                    </select>
+                </div>
+                <button type="button" id="delete-file-btn" class="btn btn-danger">Usuń plik</button>
+                <div id="delete-status" class="alert mt-3 d-none"></div>
+                <div class="form-text mt-2">
+                    <strong>Uwaga:</strong> Domyślny plik (Janko.csv) nie może zostać usunięty.
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mb-3">
+            <a href="index.html" class="btn btn-primary">
+                <i class="bi bi-arrow-left-circle me-2"></i> Wróć do quizu
+            </a>
+        </div>
+    </div>
+
+    <!-- Skrypty -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="config.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Funkcja logowania z timestampem
+            function logWithTimestamp(message, level = 'info') {
+                const timestamp = new Date().toISOString();
+                const logMessage = `[${timestamp}] [ADMIN] ${message}`;
+                
+                switch(level) {
+                    case 'error':
+                        console.error(logMessage);
+                        break;
+                    case 'warn':
+                        console.warn(logMessage);
+                        break;
+                    default:
+                        console.log(logMessage);
+                }
+            }
+            
+            logWithTimestamp('Inicjalizacja panelu administracyjnego');
+            
+            // Elementy DOM
+            const elements = {
+                questionFile: document.getElementById('question-file'),
+                questionCount: document.getElementById('question-count'),
+                shuffleQuestions: document.getElementById('shuffle-questions'),
+                saveConfig: document.getElementById('save-config'),
+                resetConfig: document.getElementById('reset-config'),
+                
+                // Nowe elementy dla wgrywania plików
+                fileUpload: document.getElementById('file-upload'),
+                uploadBtn: document.getElementById('upload-btn'),
+                uploadStatus: document.getElementById('upload-status'),
+                
+                // Nowe elementy dla usuwania plików
+                deleteFileSelect: document.getElementById('delete-file-select'),
+                deleteFileBtn: document.getElementById('delete-file-btn'),
+                deleteStatus: document.getElementById('delete-status')
+            };
+            
+            // Sprawdź, czy wszystkie elementy zostały znalezione
+            const missingElements = Object.entries(elements)
+                .filter(([key, element]) => !element)
+                .map(([key]) => key);
+            
+            if (missingElements.length > 0) {
+                logWithTimestamp(`Nie znaleziono następujących elementów DOM: ${missingElements.join(', ')}`, 'error');
+            }
+            
+            // Funkcja do wyświetlania komunikatów
+            function showMessage(element, message, type) {
+                logWithTimestamp(`Wyświetlam komunikat: ${message} (typ: ${type})`);
+                element.textContent = message;
+                element.className = `alert alert-${type} mt-3`;
+                element.classList.remove('d-none');
+                
+                // Ukryj komunikat po 5 sekundach
+                setTimeout(() => {
+                    element.classList.add('d-none');
+                }, 5000);
+            }
+            
+            // Funkcja do czytania zawartości pliku
+            function readFileContent(file) {
+                logWithTimestamp(`Odczytywanie zawartości pliku: ${file.name} (rozmiar: ${file.size} bajtów)`);
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    
+                    reader.onload = (event) => {
+                        logWithTimestamp(`Pomyślnie odczytano zawartość pliku: ${file.name}`);
+                        resolve(event.target.result);
+                    };
+                    
+                    reader.onerror = (error) => {
+                        logWithTimestamp(`Błąd podczas odczytu pliku: ${file.name}`, 'error');
+                        reject(new Error('Błąd podczas odczytu pliku'));
+                    };
+                    
+                    reader.readAsText(file);
+                });
+            }
+            
+            // Obsługa wgrywania pliku
+            elements.uploadBtn.addEventListener('click', async function() {
+                logWithTimestamp('Próba wgrania pliku');
+                if (!elements.fileUpload.files || elements.fileUpload.files.length === 0) {
+                    logWithTimestamp('Nie wybrano pliku do wgrania', 'warn');
+                    showMessage(elements.uploadStatus, 'Proszę wybrać plik do wgrania', 'danger');
+                    return;
+                }
+                
+                const file = elements.fileUpload.files[0];
+                logWithTimestamp(`Wybrano plik: ${file.name}, rozmiar: ${file.size} bajtów`);
+                
+                // Sprawdź rozszerzenie pliku
+                if (!file.name.endsWith('.csv')) {
+                    logWithTimestamp(`Nieprawidłowe rozszerzenie pliku: ${file.name}`, 'warn');
+                    showMessage(elements.uploadStatus, 'Plik musi mieć rozszerzenie .csv', 'danger');
+                    return;
+                }
+                
+                try {
+                    // Wczytaj zawartość pliku
+                    const content = await readFileContent(file);
+                    logWithTimestamp(`Wczytano zawartość pliku, długość: ${content.length} znaków`);
+                    
+                    // Sprawdź podstawową strukturę pliku
+                    const lines = content.split('\n');
+                    if (lines.length < 1) {
+                        logWithTimestamp('Plik jest pusty', 'warn');
+                        showMessage(elements.uploadStatus, 'Plik wydaje się być pusty', 'danger');
+                        return;
+                    }
+                    
+                    // Zapisz plik w localStorage
+                    localStorage.setItem(`file_${file.name}`, content);
+                    logWithTimestamp(`Plik ${file.name} został zapisany w localStorage`);
+                    
+                    // Odśwież listę plików
+                    loadAvailableFiles();
+                    
+                    // Wyczyść input
+                    elements.fileUpload.value = '';
+                    
+                    // Pokaż komunikat sukcesu
+                    showMessage(elements.uploadStatus, `Plik "${file.name}" został pomyślnie wgrany`, 'success');
+                    
+                } catch (error) {
+                    logWithTimestamp(`Błąd podczas wgrywania pliku: ${error.message}`, 'error');
+                    showMessage(elements.uploadStatus, `Błąd: ${error.message}`, 'danger');
+                    console.error('Błąd podczas wgrywania pliku:', error);
+                }
+            });
+            
+            // Wczytaj konfigurację
+            function loadConfig() {
+                logWithTimestamp('Wczytywanie konfiguracji');
+                const config = window.quizConfig.getConfig();
+                elements.questionFile.value = config.questionFile || 'Janko.csv';
+                elements.questionCount.value = config.questionCount || 20;
+                elements.shuffleQuestions.checked = !!config.shuffleQuestions;
+                logWithTimestamp(`Wczytano konfigurację: ${JSON.stringify(config)}`);
+            }
+            
+            // Zapisz konfigurację
+            elements.saveConfig.addEventListener('click', function() {
+                logWithTimestamp('Zapisywanie konfiguracji');
+                const config = {
+                    questionFile: elements.questionFile.value,
+                    questionCount: parseInt(elements.questionCount.value, 10),
+                    shuffleQuestions: elements.shuffleQuestions.checked
+                };
+                
+                window.quizConfig.updateConfig(config);
+                logWithTimestamp(`Zapisano konfigurację: ${JSON.stringify(config)}`);
+                alert('Ustawienia zostały zapisane!');
+            });
+            
+            // Resetuj konfigurację
+            elements.resetConfig.addEventListener('click', function() {
+                logWithTimestamp('Resetowanie konfiguracji do domyślnych wartości');
+                window.quizConfig.resetConfig();
+                loadConfig();
+                alert('Ustawienia zostały zresetowane do domyślnych.');
+            });
+            
+            // Wczytaj dostępne pliki
+            function loadAvailableFiles() {
+                logWithTimestamp('Wczytywanie dostępnych plików');
+                // Wyczyść listy select
+                elements.questionFile.innerHTML = '';
+                elements.deleteFileSelect.innerHTML = '';
+                
+                // Pobierz pliki
+                const files = window.quizConfig.findAvailableQuestionFiles();
+                logWithTimestamp(`Znaleziono ${files.length} plików: ${files.join(', ')}`);
+                
+                // Dodaj opcje do list
+                files.forEach(file => {
+                    const opt1 = document.createElement('option');
+                    opt1.value = file;
+                    opt1.textContent = file;
+                    elements.questionFile.appendChild(opt1);
+                    
+                    const opt2 = document.createElement('option');
+                    opt2.value = file;
+                    opt2.textContent = file;
+                    elements.deleteFileSelect.appendChild(opt2);
+                });
+                
+                // Ustaw aktualnie wybrany plik
+                const config = window.quizConfig.getConfig();
+                if (config.questionFile) {
+                    elements.questionFile.value = config.questionFile;
+                }
+            }
+            
+            // Obsługa usuwania pliku
+            elements.deleteFileBtn.addEventListener('click', function() {
+                const fileName = elements.deleteFileSelect.value;
+                
+                if (!fileName) {
+                    logWithTimestamp('Próba usunięcia pliku, ale nie wybrano pliku', 'warn');
+                    showMessage(elements.deleteStatus, 'Wybierz plik do usunięcia', 'danger');
+                    return;
+                }
+                
+                logWithTimestamp(`Próba usunięcia pliku: ${fileName}`);
+                
+                // Nie pozwól usunąć domyślnego pliku
+                if (fileName === 'Janko.csv') {
+                    logWithTimestamp('Próba usunięcia domyślnego pliku Janko.csv', 'warn');
+                    showMessage(elements.deleteStatus, 'Nie można usunąć domyślnego pliku Janko.csv', 'danger');
+                    return;
+                }
+                
+                // Poproś o potwierdzenie
+                if (!confirm(`Czy na pewno chcesz usunąć plik "${fileName}"? Ta operacja jest nieodwracalna.`)) {
+                    logWithTimestamp('Anulowano usunięcie pliku', 'info');
+                    return;
+                }
+                
+                try {
+                    // Usuń plik z localStorage
+                    localStorage.removeItem(`file_${fileName}`);
+                    logWithTimestamp(`Usunięto plik: ${fileName}`);
+                    
+                    // Jeśli usunięty plik był aktualnie wybrany w konfiguracji, zmień na domyślny
+                    const config = window.quizConfig.getConfig();
+                    if (config.questionFile === fileName) {
+                        window.quizConfig.updateConfig({ questionFile: 'Janko.csv' });
+                        logWithTimestamp(`Zaktualizowano konfigurację po usunięciu pliku: ${fileName}`);
+                    }
+                    
+                    // Odśwież listę plików
+                    loadAvailableFiles();
+                    
+                    // Pokaż komunikat sukcesu
+                    showMessage(elements.deleteStatus, `Plik "${fileName}" został pomyślnie usunięty`, 'success');
+                } catch (error) {
+                    logWithTimestamp(`Błąd podczas usuwania pliku: ${error.message}`, 'error');
+                    showMessage(elements.deleteStatus, `Błąd podczas usuwania pliku: ${error.message}`, 'danger');
+                    console.error('Błąd podczas usuwania pliku:', error);
+                }
+            });
+            
+            // Inicjalizacja
+            loadConfig();
+            loadAvailableFiles();
+            logWithTimestamp('Inicjalizacja panelu administracyjnego zakończona');
+        });
+    </script>
+</body>
+</html> 
