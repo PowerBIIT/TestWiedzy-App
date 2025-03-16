@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Aplikacja</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="my-4 text-center">
+            <h1>Quiz Wiedzy</h1>
+        </header>
+        
+        <div id="start-screen" class="text-center">
+            <h2>Witaj w quizie!</h2>
+            <p>Quiz zawiera 20 pytań z czterema opcjami odpowiedzi.</p>
+            <div id="error-message" class="alert alert-danger d-none mb-3"></div>
+            <button id="start-btn" class="btn btn-primary btn-lg">Rozpocznij Quiz</button>
+        </div>
+        
+        <div id="quiz-container" class="d-none">
+            <div class="progress mb-3">
+                <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <span id="question-number">Pytanie 1/20</span>
+                    <span id="score">Wynik: 0</span>
+                </div>
+                <div class="card-body">
+                    <h5 id="question-text" class="card-title mb-4">Treść pytania</h5>
+                    <div id="options-container" class="d-grid gap-2">
+                        <button class="btn btn-outline-primary option">Odpowiedź A</button>
+                        <button class="btn btn-outline-primary option">Odpowiedź B</button>
+                        <button class="btn btn-outline-primary option">Odpowiedź C</button>
+                        <button class="btn btn-outline-primary option">Odpowiedź D</button>
+                    </div>
+                </div>
+                <div class="card-footer text-end">
+                    <button id="next-btn" class="btn btn-primary d-none">Następne pytanie</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="results-screen" class="text-center d-none">
+            <h2>Koniec quizu!</h2>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 id="final-score">Twój wynik: 0/20</h3>
+                    <div class="progress mb-3">
+                        <div id="final-progress-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            <button id="restart-btn" class="btn btn-primary">Rozpocznij ponownie</button>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (dla componentów jak spinner) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="questions.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
