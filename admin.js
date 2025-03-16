@@ -71,7 +71,7 @@ function loadConfig() {
         console.log('Wczytana konfiguracja:', config);
         
         if (config) {
-            elements.questionFile.value = config.questionFile || 'Pytania.md';
+            elements.questionFile.value = config.questionFile || 'Pytania.csv';
             elements.questionCount.value = config.questionCount || 20;
             elements.shuffleQuestions.checked = config.shuffleQuestions !== undefined ? config.shuffleQuestions : true;
             console.log('Formularz zaktualizowany wartościami:', {
@@ -432,7 +432,7 @@ async function getFileContent(fileName) {
         console.error(`Błąd pobierania zawartości pliku ${fileName}:`, error);
         
         // Jeśli to plik Pytania.md, użyj statycznych danych
-        if (fileName === 'Pytania.md' && window.staticQuizData) {
+        if (fileName === 'Pytania.csv' && window.staticQuizData) {
             adminState.fileContents[fileName] = window.staticQuizData;
             return window.staticQuizData;
         }
@@ -533,6 +533,32 @@ function showAlert(message, type = 'info') {
         alertDiv.classList.remove('show');
         setTimeout(() => alertDiv.remove(), 300);
     }, 3000);
+}
+
+// Sprawdź, czy plik ma poprawne rozszerzenie
+function validateFileName(fileName) {
+    if (!fileName) {
+        showError('Nazwa pliku nie może być pusta');
+        return false;
+    }
+    
+    if (!fileName.endsWith('.csv')) {
+        showError('Nazwa pliku musi kończyć się na .csv');
+        return false;
+    }
+    
+    return true;
+}
+
+// Funkcja do tworzenia przykładowych plików
+function createSampleFiles() {
+    const sampleFiles = {
+        'Pytania.csv': staticQuizData,
+        'Pytania_literatura.csv': staticQuizExtraData['Pytania_literatura.csv'],
+        'Pytania_historia.csv': staticQuizExtraData['Pytania_historia.csv']
+    };
+    
+    // ... existing code ...
 }
 
 // Inicjalizacja po załadowaniu dokumentu

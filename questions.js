@@ -1,43 +1,83 @@
 /**
- * Module to load and parse quiz questions from the Pytania.md file
+ * Module to load and parse quiz questions from the Pytania.csv file
  */
 
 // This will hold our questions after loading
 let quizQuestions = [];
 
 /**
- * Parses a line from the Pytania.md file into a question object
+ * Funkcja do logowania z timestampem
+ * @param {string} message - Wiadomość do zalogowania
+ * @param {string} level - Poziom logowania (info, warn, error)
+ */
+function logWithTimestamp(message, level = 'info') {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] ${message}`;
+    
+    switch(level) {
+        case 'error':
+            console.error(logMessage);
+            break;
+        case 'warn':
+            console.warn(logMessage);
+            break;
+        default:
+            console.log(logMessage);
+    }
+}
+
+/**
+ * Parses a line from the Pytania.csv file into a question object
  * @param {string} line - A line from the file
  * @returns {object|null} - Question object or null if invalid
  */
 function parseQuestionLine(line) {
     // Skip header line if present
     if (line.startsWith("Pytanie,Odpowiedź") || line.trim() === '') {
+        logWithTimestamp(`Pomijam linię nagłówka lub pustą: "${line}"`);
         return null;
     }
+    
+    logWithTimestamp(`Przetwarzanie linii: "${line}"`);
     
     // The format is CSV, but we need to handle the quoted fields properly
     const regex = /"([^"]*)"|([^,]+)/g;
     const matches = [...line.matchAll(regex)];
     
     if (matches.length < 6) {
-        console.error("Invalid question format:", line);
+        logWithTimestamp(`Nieprawidłowy format pytania (znaleziono ${matches.length} pól, wymagane min. 6): "${line}"`, 'error');
         return null;
     }
     
     // Extract the components (handling both quoted and unquoted formats)
     const extractField = (match) => match[1] !== undefined ? match[1] : match[0];
     
-    return {
-        question: extractField(matches[0]),
-        options: [
+    try {
+        // Pobierz oryginalne pytanie
+        let question = extractField(matches[0]);
+        
+        // Usuń numer pytania (np. "1. ", "2. ", itd.) z treści pytania
+        question = question.replace(/^\d+\.\s*/, '');
+        
+        const options = [
             { text: extractField(matches[1]), id: 'A' },
             { text: extractField(matches[2]), id: 'B' },
             { text: extractField(matches[3]), id: 'C' },
             { text: extractField(matches[4]), id: 'D' }
-        ],
-        correctAnswer: extractField(matches[5])
-    };
+        ];
+        const correctAnswer = extractField(matches[5]);
+        
+        logWithTimestamp(`Poprawnie sparsowano pytanie: "${question}" z odpowiedzią: "${correctAnswer}"`);
+        
+        return {
+            question,
+            options,
+            correctAnswer
+        };
+    } catch (error) {
+        logWithTimestamp(`Błąd podczas parsowania linii: "${line}". Szczegóły: ${error.message}`, 'error');
+        return null;
+    }
 }
 
 // Statyczne dane pytań jako rozwiązanie awaryjne
@@ -67,19 +107,19 @@ const staticQuizData = `Pytanie,Odpowiedź A,Odpowiedź B,Odpowiedź C,Odpowied�
  * Przykładowe treści dla dodatkowych plików
  */
 const staticQuizExtraData = {
-    'Pytania2.md': `Pytanie,Odpowiedź A,Odpowiedź B,Odpowiedź C,Odpowiedź D,Poprawna odpowiedź
+    'Pytania2.csv': `Pytanie,Odpowiedź A,Odpowiedź B,Odpowiedź C,Odpowiedź D,Poprawna odpowiedź
 "1. Co to jest HTML?","Hyper Text Markup Language","High Tech Multi Language","Home Tool Markup Language","Hyperlinks and Text Markup Language",A
 "2. Który element HTML definiuje ważny tekst?","<important>","<strong>","<b>","<i>",B
 "3. Który język programowania jest używany do stylizacji stron internetowych?",HTML,CSS,Python,Java,B
 "4. Co to jest JavaScript?","Język programowania","System operacyjny","Baza danych","Protokół sieciowy",A
 "5. Który atrybut HTML określa alternatywny tekst dla obrazu?","src","alt","title","href",B`,
 
-    'Pytania_literatura.md': `Pytanie,Odpowiedź A,Odpowiedź B,Odpowiedź C,Odpowiedź D,Poprawna odpowiedź
+    'Pytania_literatura.csv': `Pytanie,Odpowiedź A,Odpowiedź B,Odpowiedź C,Odpowiedź D,Poprawna odpowiedź
 "1. Kto napisał epopeję Pan Tadeusz?","Juliusz Słowacki","Adam Mickiewicz","Henryk Sienkiewicz","Cyprian Kamil Norwid",B
 "2. Kto jest autorem Lalki?","Eliza Orzeszkowa","Henryk Sienkiewicz","Bolesław Prus","Maria Konopnicka",C
 "3. Który utwór nie został napisany przez Henryka Sienkiewicza?","Potop","Quo Vadis","Wesele","Ogniem i mieczem",C`,
 
-    'Pytania_historia.md': `Pytanie,Odpowiedź A,Odpowiedź B,Odpowiedź C,Odpowiedź D,Poprawna odpowiedź
+    'Pytania_historia.csv': `Pytanie,Odpowiedź A,Odpowiedź B,Odpowiedź C,Odpowiedź D,Poprawna odpowiedź
 "1. W którym roku miał miejsce chrzest Polski?",966,1000,1025,1047,A
 "2. Kto był pierwszym królem Polski?","Mieszko I","Bolesław Chrobry","Kazimierz Wielki","Władysław Łokietek",B
 "3. Kiedy wybuchło Powstanie Warszawskie?","1 września 1939","1 sierpnia 1944","3 maja 1791","17 września 1939",B`
@@ -92,56 +132,69 @@ const staticQuizExtraData = {
 async function loadQuestions() {
     try {
         // Pobierz aktualną konfigurację
-        const config = window.quizConfig ? window.quizConfig.getConfig() : { questionFile: 'Pytania.md', questionCount: 20 };
-        const filename = config.questionFile || 'Pytania.md';
+        const config = window.quizConfig ? window.quizConfig.getConfig() : { questionFile: 'Pytania.csv', questionCount: 20 };
+        const filename = config.questionFile || 'Pytania.csv';
+        
+        logWithTimestamp(`Rozpoczynam ładowanie pytań z pliku: ${filename}`);
         
         let text;
         
         try {
             // Próba załadowania pytań z pliku
+            logWithTimestamp(`Próba pobrania pliku ${filename} przez fetch`);
             const response = await fetch(filename);
             if (!response.ok) {
+                logWithTimestamp(`Błąd pobierania pliku ${filename}: ${response.status} ${response.statusText}`, 'error');
                 throw new Error(`Nie udało się załadować pliku ${filename}`);
             }
             text = await response.text();
+            logWithTimestamp(`Pomyślnie pobrano plik ${filename}, długość tekstu: ${text.length} znaków`);
         } catch (fetchError) {
-            console.warn(`Nie udało się załadować pliku ${filename}, używam danych statycznych`, fetchError);
+            logWithTimestamp(`Nie udało się załadować pliku ${filename} przez fetch: ${fetchError.message}`, 'warn');
             
             // Użyj statycznych danych w przypadku problemów z fetch
             if (staticQuizExtraData[filename]) {
+                logWithTimestamp(`Używam statycznych danych dla pliku ${filename} z staticQuizExtraData`);
                 text = staticQuizExtraData[filename];
             } else {
+                logWithTimestamp(`Używam domyślnych statycznych danych dla pliku ${filename}`);
                 text = staticQuizData;
             }
         }
         
         // Split by lines and process each line
         const lines = text.split('\n');
+        logWithTimestamp(`Podzielono tekst na ${lines.length} linii`);
         
         let parsedQuestions = lines
             .map(parseQuestionLine)
             .filter(q => q !== null);
         
+        logWithTimestamp(`Pomyślnie sparsowano ${parsedQuestions.length} pytań z ${lines.length} linii`);
+        
         if (parsedQuestions.length === 0) {
+            logWithTimestamp('Nie znaleziono żadnych pytań po parsowaniu', 'error');
             throw new Error('Nie znaleziono żadnych pytań');
         }
         
         // Shuffle questions if configured
         if (config.shuffleQuestions) {
+            logWithTimestamp('Mieszanie kolejności pytań');
             parsedQuestions = shuffleArray(parsedQuestions);
         }
         
         // Limit questions to configured count
         if (config.questionCount && config.questionCount < parsedQuestions.length) {
+            logWithTimestamp(`Ograniczanie liczby pytań do ${config.questionCount} (z ${parsedQuestions.length})`);
             parsedQuestions = parsedQuestions.slice(0, config.questionCount);
         }
         
         quizQuestions = parsedQuestions;
         
-        console.log(`Załadowano ${quizQuestions.length} pytań z pliku ${filename}`);
+        logWithTimestamp(`Załadowano ${quizQuestions.length} pytań z pliku ${filename}`);
         return quizQuestions;
     } catch (error) {
-        console.error("Error loading questions:", error);
+        logWithTimestamp(`Błąd podczas ładowania pytań: ${error.message}`, 'error');
         return [];
     }
 }

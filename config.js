@@ -4,13 +4,34 @@
 
 // Domyślna konfiguracja
 const defaultConfig = {
-    questionFile: 'Pytania.md',
+    questionFile: 'Pytania.csv',
     questionCount: 20,
     shuffleQuestions: true
 };
 
 // Aktualna konfiguracja
 let currentConfig = { ...defaultConfig };
+
+/**
+ * Funkcja do logowania z timestampem
+ * @param {string} message - Wiadomość do zalogowania
+ * @param {string} level - Poziom logowania (info, warn, error)
+ */
+function logWithTimestamp(message, level = 'info') {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] [CONFIG] ${message}`;
+    
+    switch(level) {
+        case 'error':
+            console.error(logMessage);
+            break;
+        case 'warn':
+            console.warn(logMessage);
+            break;
+        default:
+            console.log(logMessage);
+    }
+}
 
 /**
  * Sprawdza, czy localStorage jest dostępny
@@ -22,10 +43,10 @@ function isLocalStorageAvailable() {
         localStorage.setItem(testKey, testKey);
         const result = localStorage.getItem(testKey) === testKey;
         localStorage.removeItem(testKey);
-        console.log('Test localStorage: ' + (result ? 'dostępny' : 'niedostępny'));
+        logWithTimestamp('Test localStorage: ' + (result ? 'dostępny' : 'niedostępny'));
         return result;
     } catch (e) {
-        console.error('localStorage nie jest dostępny:', e);
+        logWithTimestamp('localStorage nie jest dostępny: ' + e.message, 'error');
         return false;
     }
 }
@@ -34,19 +55,19 @@ function isLocalStorageAvailable() {
  * Zapisuje konfigurację do localStorage
  */
 function saveConfig() {
-    console.log('Próba zapisania konfiguracji do localStorage...');
+    logWithTimestamp('Próba zapisania konfiguracji do localStorage...');
     
     if (!isLocalStorageAvailable()) {
-        console.error('Nie można zapisać konfiguracji - localStorage niedostępny');
+        logWithTimestamp('Nie można zapisać konfiguracji - localStorage niedostępny', 'error');
         return false;
     }
     
     try {
         localStorage.setItem('quizConfig', JSON.stringify(currentConfig));
-        console.log('Konfiguracja zapisana w localStorage:', currentConfig);
+        logWithTimestamp('Konfiguracja zapisana w localStorage: ' + JSON.stringify(currentConfig));
         return true;
     } catch (error) {
-        console.error('Błąd podczas zapisywania konfiguracji do localStorage:', error);
+        logWithTimestamp('Błąd podczas zapisywania konfiguracji do localStorage: ' + error.message, 'error');
         return false;
     }
 }
@@ -56,11 +77,11 @@ function saveConfig() {
  * @returns {Object} Konfiguracja
  */
 function loadConfig() {
-    console.log('Próba wczytania konfiguracji z localStorage...');
+    logWithTimestamp('Próba wczytania konfiguracji z localStorage...');
     
     if (!isLocalStorageAvailable()) {
-        console.error('Nie można wczytać konfiguracji - localStorage niedostępny');
-        console.log('Używam domyślnej konfiguracji:', defaultConfig);
+        logWithTimestamp('Nie można wczytać konfiguracji - localStorage niedostępny', 'error');
+        logWithTimestamp('Używam domyślnej konfiguracji: ' + JSON.stringify(defaultConfig));
         return { ...defaultConfig };
     }
     
@@ -69,15 +90,15 @@ function loadConfig() {
         
         if (storedConfig) {
             const parsedConfig = JSON.parse(storedConfig);
-            console.log('Wczytana konfiguracja z localStorage:', parsedConfig);
+            logWithTimestamp('Wczytana konfiguracja z localStorage: ' + JSON.stringify(parsedConfig));
             return parsedConfig;
         } else {
-            console.log('Brak zapisanej konfiguracji. Używam domyślnej:', defaultConfig);
+            logWithTimestamp('Brak zapisanej konfiguracji. Używam domyślnej: ' + JSON.stringify(defaultConfig));
             return { ...defaultConfig };
         }
     } catch (error) {
-        console.error('Błąd podczas wczytywania konfiguracji z localStorage:', error);
-        console.log('Używam domyślnej konfiguracji:', defaultConfig);
+        logWithTimestamp('Błąd podczas wczytywania konfiguracji z localStorage: ' + error.message, 'error');
+        logWithTimestamp('Używam domyślnej konfiguracji: ' + JSON.stringify(defaultConfig));
         return { ...defaultConfig };
     }
 }
@@ -88,10 +109,10 @@ function loadConfig() {
  * @returns {Object} Zaktualizowana konfiguracja
  */
 function updateConfig(newConfig) {
-    console.log('Aktualizacja konfiguracji. Otrzymano:', newConfig);
+    logWithTimestamp('Aktualizacja konfiguracji. Otrzymano: ' + JSON.stringify(newConfig));
     
     if (typeof newConfig !== 'object') {
-        console.error('Nieprawidłowy format konfiguracji:', newConfig);
+        logWithTimestamp('Nieprawidłowy format konfiguracji: ' + typeof newConfig, 'error');
         return currentConfig;
     }
     
@@ -99,17 +120,17 @@ function updateConfig(newConfig) {
         // Sprawdź, czy questionCount jest liczbą
         const count = parseInt(newConfig.questionCount, 10);
         if (isNaN(count) || count < 1) {
-            console.error('Nieprawidłowa wartość questionCount:', newConfig.questionCount);
+            logWithTimestamp('Nieprawidłowa wartość questionCount: ' + newConfig.questionCount, 'error');
             return currentConfig;
         }
         newConfig.questionCount = count;
     }
     
     currentConfig = { ...currentConfig, ...newConfig };
-    console.log('Zaktualizowana konfiguracja:', currentConfig);
+    logWithTimestamp('Zaktualizowana konfiguracja: ' + JSON.stringify(currentConfig));
     
     const saved = saveConfig();
-    console.log('Zapisano konfigurację:', saved);
+    logWithTimestamp('Zapisano konfigurację: ' + (saved ? 'tak' : 'nie'));
     
     return currentConfig;
 }
@@ -119,7 +140,7 @@ function updateConfig(newConfig) {
  * @returns {Object} Zresetowana konfiguracja
  */
 function resetConfig() {
-    console.log('Resetowanie konfiguracji do domyślnych wartości');
+    logWithTimestamp('Resetowanie konfiguracji do domyślnych wartości');
     currentConfig = { ...defaultConfig };
     saveConfig();
     return currentConfig;
@@ -130,7 +151,7 @@ function resetConfig() {
  * @returns {Object} Aktualna konfiguracja
  */
 function getConfig() {
-    console.log('Pobieranie aktualnej konfiguracji:', currentConfig);
+    logWithTimestamp('Pobieranie aktualnej konfiguracji: ' + JSON.stringify(currentConfig));
     return { ...currentConfig };
 }
 
@@ -139,48 +160,49 @@ function getConfig() {
  * @returns {Array} Lista plików
  */
 function findAvailableQuestionFiles() {
-    console.log('Wyszukiwanie dostępnych plików z pytaniami...');
+    logWithTimestamp('Wyszukiwanie dostępnych plików z pytaniami...');
     const files = [];
     
     if (!isLocalStorageAvailable()) {
-        console.error('Nie można wyszukać plików - localStorage niedostępny');
-        return ['Pytania.md'];
+        logWithTimestamp('Nie można wyszukać plików - localStorage niedostępny', 'error');
+        return ['Pytania.csv'];
     }
     
     try {
         // Sprawdź, czy domyślny plik istnieje
-        if (!localStorage.getItem('file_Pytania.md')) {
-            console.log('Tworzenie domyślnego pliku Pytania.md');
-            localStorage.setItem('file_Pytania.md', `"1. Przykładowe pytanie?",Odpowiedź A,Odpowiedź B,Odpowiedź C,Odpowiedź D,A`);
+        if (!localStorage.getItem('file_Pytania.csv')) {
+            logWithTimestamp('Tworzenie domyślnego pliku Pytania.csv');
+            localStorage.setItem('file_Pytania.csv', `"1. Przykładowe pytanie?",Odpowiedź A,Odpowiedź B,Odpowiedź C,Odpowiedź D,A`);
         }
         
         // Wyszukaj pliki w localStorage
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key.startsWith('file_') && key.endsWith('.md')) {
+            if (key.startsWith('file_') && key.endsWith('.csv')) {
                 const filename = key.substring(5);
                 files.push(filename);
+                logWithTimestamp(`Znaleziono plik: ${filename}`);
             }
         }
         
-        console.log('Znaleziono pliki:', files);
+        logWithTimestamp('Znaleziono pliki: ' + JSON.stringify(files));
         return files;
     } catch (error) {
-        console.error('Błąd podczas wyszukiwania plików:', error);
-        return ['Pytania.md'];
+        logWithTimestamp('Błąd podczas wyszukiwania plików: ' + error.message, 'error');
+        return ['Pytania.csv'];
     }
 }
 
 // Inicjalizacja konfiguracji
 function initConfig() {
-    console.log('Inicjalizacja konfiguracji...');
+    logWithTimestamp('Inicjalizacja konfiguracji...');
     
     // Sprawdź, czy localStorage jest dostępny
     if (isLocalStorageAvailable()) {
-        console.log('localStorage jest dostępny, ładuję konfigurację...');
+        logWithTimestamp('localStorage jest dostępny, ładuję konfigurację...');
         currentConfig = loadConfig();
     } else {
-        console.warn('localStorage nie jest dostępny, używam domyślnej konfiguracji');
+        logWithTimestamp('localStorage nie jest dostępny, używam domyślnej konfiguracji');
         currentConfig = { ...defaultConfig };
     }
 }

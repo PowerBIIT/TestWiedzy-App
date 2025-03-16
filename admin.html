@@ -26,7 +26,7 @@
                         <div class="col-md-6">
                             <label for="question-file" class="form-label">Plik z pytaniami</label>
                             <select id="question-file" class="form-select">
-                                <option value="Pytania.md">Pytania.md (domyślny)</option>
+                                <option value="Pytania.csv">Pytania.csv (domyślny)</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -57,7 +57,7 @@
                 <div class="mb-3">
                     <label for="edit-file-select" class="form-label">Wybierz plik do edycji</label>
                     <select id="edit-file-select" class="form-select">
-                        <option value="Pytania.md">Pytania.md (domyślny)</option>
+                        <option value="Pytania.csv">Pytania.csv (domyślny)</option>
                     </select>
                 </div>
                 <div class="mb-3">
@@ -75,7 +75,7 @@
                 <div class="mb-3">
                     <label for="new-file" class="form-label">Dodaj nowy plik</label>
                     <div class="input-group">
-                        <input type="text" id="new-file" class="form-control" placeholder="nazwa_pliku.md">
+                        <input type="text" id="new-file" class="form-control" placeholder="nazwa_pliku.csv">
                         <button type="button" id="create-file" class="btn btn-outline-success">Utwórz</button>
                     </div>
                 </div>
@@ -114,7 +114,7 @@
             // Wczytaj konfigurację
             function loadConfig() {
                 const config = window.quizConfig.getConfig();
-                elements.questionFile.value = config.questionFile || 'Pytania.md';
+                elements.questionFile.value = config.questionFile || 'Pytania.csv';
                 elements.questionCount.value = config.questionCount || 20;
                 elements.shuffleQuestions.checked = !!config.shuffleQuestions;
             }
@@ -203,8 +203,8 @@
                     return;
                 }
                 
-                if (!fileName.endsWith('.md')) {
-                    alert('Nazwa pliku musi kończyć się na .md');
+                if (!fileName.endsWith('.csv')) {
+                    alert('Nazwa pliku musi kończyć się na .csv');
                     return;
                 }
                 
