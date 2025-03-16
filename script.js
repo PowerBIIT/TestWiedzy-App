@@ -390,29 +390,12 @@ function finishQuiz() {
     
     // Update UI
     elements.quizContainer.classList.add('d-none');
-    elements.resultsScreen.classList.remove('d-none');
+    elements.resultsScreen.classList.add('d-none');
+    elements.resultContainer.classList.remove('d-none');
     
     // Calculate percentage
     const percentage = (quizState.score / quizState.questions.length) * 100;
     logWithTimestamp(`Wynik końcowy: ${quizState.score}/${quizState.questions.length} (${percentage.toFixed(0)}%)`);
-    
-    // Update final score
-    elements.finalScore.textContent = `Twój wynik: ${quizState.score}/${quizState.questions.length} (${percentage.toFixed(0)}%)`;
-    
-    // Update final progress bar
-    elements.finalProgressBar.style.width = `${percentage}%`;
-    
-    // Set progress bar color based on score
-    if (percentage < 50) {
-        elements.finalProgressBar.classList.add('bg-danger');
-        logWithTimestamp('Wynik poniżej 50% - czerwony pasek postępu');
-    } else if (percentage < 75) {
-        elements.finalProgressBar.classList.add('bg-warning');
-        logWithTimestamp('Wynik pomiędzy 50% a 75% - żółty pasek postępu');
-    } else {
-        elements.finalProgressBar.classList.add('bg-success');
-        logWithTimestamp('Wynik powyżej 75% - zielony pasek postępu');
-    }
     
     // Show results
     showResults();
