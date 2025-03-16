@@ -100,4 +100,87 @@ Aby zmodyfikować quiz:
 
 ## Licencja
 
-Ten projekt jest open source i dostępny na licencji MIT. 
+Ten projekt jest open source i dostępny na licencji MIT.
+
+## Wdrażanie aplikacji na Firebase Hosting
+
+### Wymagania wstępne
+- Node.js zainstalowany na komputerze
+- Konto Google
+- Git zainstalowany na komputerze
+
+### Kroki wdrażania
+
+1. **Utwórz projekt Firebase**
+   - Wejdź na stronę [firebase.google.com](https://firebase.google.com)
+   - Zaloguj się na konto Google
+   - Kliknij "Go to console" i "Add project"
+   - Nazwij projekt i postępuj zgodnie z instrukcjami
+
+2. **Zainstaluj Firebase CLI**
+   ```
+   npm install -g firebase-tools
+   ```
+
+3. **Zaloguj się do Firebase**
+   ```
+   firebase login
+   ```
+
+4. **Zainicjuj projekt Firebase w katalogu z aplikacją**
+   ```
+   firebase init
+   ```
+   - Wybierz "Hosting"
+   - Wybierz swój projekt Firebase
+   - Określ katalog publiczny: "public"
+   - Odpowiedz "No" na pytanie o jednostronicową aplikację (SPA)
+   - Odpowiedz "No" na pytanie o automatyczne wdrażanie z GitHub Actions (chyba że chcesz skonfigurować CI/CD)
+
+5. **Skopiuj pliki aplikacji do katalogu public**
+   ```
+   Copy-Item index.html styles.css script.js config.js questions.js admin.html admin.js -Destination public/
+   ```
+   Alternatywnie możesz kopiować pliki pojedynczo:
+   ```
+   Copy-Item index.html -Destination public/
+   Copy-Item styles.css -Destination public/
+   Copy-Item script.js -Destination public/
+   Copy-Item config.js -Destination public/
+   Copy-Item questions.js -Destination public/
+   Copy-Item admin.html -Destination public/
+   Copy-Item admin.js -Destination public/
+   ```
+
+6. **Wdróż aplikację**
+   ```
+   firebase deploy
+   ```
+
+7. **Gotowe!**
+   Po zakończeniu wdrażania, otrzymasz URL aplikacji (np. https://twoj-projekt.web.app).
+
+### Rozwiązywanie problemów
+
+1. **Jeśli Firebase nie widzi wszystkich plików**
+   - Upewnij się, że wszystkie pliki zostały poprawnie skopiowane do katalogu public
+   - Sprawdź zawartość katalogu public przed wdrożeniem
+
+2. **Jeśli pojawia się błąd o braku Firestore**
+   - Możesz utworzyć bazę danych Firestore w konsoli Firebase lub
+   - Zainicjuj ponownie projekt tylko z hostingiem: `firebase init hosting`
+
+### Aktualizacja aplikacji
+
+Aby zaktualizować aplikację po wprowadzeniu zmian:
+
+1. Skopiuj zmienione pliki do katalogu public
+2. Wdróż ponownie za pomocą `firebase deploy`
+
+### Automatyczne wdrażanie z GitHub
+
+Możesz skonfigurować automatyczne wdrażanie za każdym razem, gdy wysyłasz zmiany do repozytorium GitHub:
+
+1. Podczas inicjalizacji Firebase wybierz "Yes" przy pytaniu o GitHub Actions
+2. Podaj nazwę repozytorium w formacie "użytkownik/nazwa-repo"
+3. Po skonfigurowaniu, każdy push do głównej gałęzi automatycznie wdroży aplikację 
