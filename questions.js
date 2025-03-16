@@ -139,26 +139,35 @@ async function loadQuestions() {
         
         let text;
         
-        try {
-            // Próba załadowania pytań z pliku
-            logWithTimestamp(`Próba pobrania pliku ${filename} przez fetch`);
-            const response = await fetch(filename);
-            if (!response.ok) {
-                logWithTimestamp(`Błąd pobierania pliku ${filename}: ${response.status} ${response.statusText}`, 'error');
-                throw new Error(`Nie udało się załadować pliku ${filename}`);
-            }
-            text = await response.text();
-            logWithTimestamp(`Pomyślnie pobrano plik ${filename}, długość tekstu: ${text.length} znaków`);
-        } catch (fetchError) {
-            logWithTimestamp(`Nie udało się załadować pliku ${filename} przez fetch: ${fetchError.message}`, 'warn');
-            
-            // Użyj statycznych danych w przypadku problemów z fetch
-            if (staticQuizExtraData[filename]) {
-                logWithTimestamp(`Używam statycznych danych dla pliku ${filename} z staticQuizExtraData`);
-                text = staticQuizExtraData[filename];
-            } else {
-                logWithTimestamp(`Używam domyślnych statycznych danych dla pliku ${filename}`);
-                text = staticQuizData;
+        // Najpierw sprawdź, czy plik istnieje w localStorage
+        const localStorageKey = `file_${filename}`;
+        const localStorageContent = localStorage.getItem(localStorageKey);
+        
+        if (localStorageContent) {
+            logWithTimestamp(`Znaleziono plik ${filename} w localStorage, używam jego zawartości`);
+            text = localStorageContent;
+        } else {
+            // Jeśli nie ma w localStorage, spróbuj pobrać przez fetch
+            try {
+                logWithTimestamp(`Plik ${filename} nie istnieje w localStorage, próba pobrania przez fetch`);
+                const response = await fetch(filename);
+                if (!response.ok) {
+                    logWithTimestamp(`Błąd pobierania pliku ${filename}: ${response.status} ${response.statusText}`, 'error');
+                    throw new Error(`Nie udało się załadować pliku ${filename}`);
+                }
+                text = await response.text();
+                logWithTimestamp(`Pomyślnie pobrano plik ${filename} przez fetch, długość tekstu: ${text.length} znaków`);
+            } catch (fetchError) {
+                logWithTimestamp(`Nie udało się załadować pliku ${filename} przez fetch: ${fetchError.message}`, 'warn');
+                
+                // Użyj statycznych danych w przypadku problemów z fetch
+                if (staticQuizExtraData[filename]) {
+                    logWithTimestamp(`Używam statycznych danych dla pliku ${filename} z staticQuizExtraData`);
+                    text = staticQuizExtraData[filename];
+                } else {
+                    logWithTimestamp(`Używam domyślnych statycznych danych dla pliku ${filename}`);
+                    text = staticQuizData;
+                }
             }
         }
         
@@ -218,6 +227,7 @@ function shuffleArray(array) {
  * @returns {Array} - Array of question objects
  */
 function getQuestions() {
+    logWithTimestamp(`Pobieranie pytań, obecnie dostępnych: ${quizQuestions.length}`);
     return [...quizQuestions];
 }
 

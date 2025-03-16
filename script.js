@@ -151,22 +151,25 @@ function updateConfigDisplay() {
 async function startQuiz() {
     logWithTimestamp('Rozpoczynanie quizu');
     
+    // Pobierz i pokaż aktualną konfigurację
+    const currentConfig = window.quizConfig ? window.quizConfig.getConfig() : { questionFile: 'Pytania.csv' };
+    logWithTimestamp(`Konfiguracja przy starcie quizu: ${JSON.stringify(currentConfig)}`);
+    logWithTimestamp(`Używany plik z pytaniami: ${currentConfig.questionFile}`);
+    
     // Dodaj wskaźnik ładowania
     elements.startBtn.innerHTML = 'Ładowanie pytań... <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
     elements.startBtn.disabled = true;
     elements.errorMessage.classList.add('d-none');
     
     try {
-        // Get questions if not already loaded
+        // Sprawdź dostępność API
         if (!window.quizAPI) {
             throw new Error('API quizu nie jest dostępne');
         }
         
-        logWithTimestamp('Sprawdzanie dostępności pytań');
-        if (window.quizAPI.getQuestions().length === 0) {
-            logWithTimestamp('Brak załadowanych pytań, ładowanie pytań');
-            await window.quizAPI.loadQuestions();
-        }
+        // Zawsze ładuj pytania od nowa przy starcie quizu
+        logWithTimestamp('Ładowanie pytań z pliku konfiguracyjnego');
+        await window.quizAPI.loadQuestions();
         
         quizState.questions = window.quizAPI.getQuestions();
         logWithTimestamp(`Załadowano ${quizState.questions.length} pytań`);
@@ -360,8 +363,15 @@ function restartQuiz() {
     // Reset UI
     elements.finalProgressBar.classList.remove('bg-danger', 'bg-warning', 'bg-success');
     
-    // Aktualizuj konfigurację (w przypadku zmian)
+    // Przeładuj konfigurację i zaktualizuj wyświetlanie
+    if (window.quizConfig) {
+        const config = window.quizConfig.getConfig();
+        logWithTimestamp(`Aktualna konfiguracja przy restarcie: ${JSON.stringify(config)}`);
+    }
     updateConfigDisplay();
+    
+    // Wyczyść bufor pytań, aby wymusić ich ponowne załadowanie
+    quizState.questions = [];
     
     // Start quiz again
     startQuiz();
